@@ -24,6 +24,11 @@ class MetadataManager:
         self.logger.info("Folgende MP4-Metadaten wurden aus der Quelldatei ausgelesen.")
         for line in metadata.split('\n'):
             self.logger.info(line)
+    
+class MetadataReader(MetadataManager):
+
+    def __init__(self, logger):
+        super().__init__(logger)
 
     def get_metadata(self, file_path):
         # AtomicParsley Befehl um alle Metadaten auszulesen
@@ -60,11 +65,6 @@ class MetadataManager:
             self.logger.info("Der Albumname wird benötigt um das Zielverzeichnis zu bestimmen.")
             sys.exit(1)
 
-    def overwrite_description(self, file_path, description):
-        # AtomicParsley Befehl um die neue Beschreibung hinzuzufügen
-        cmd = [self._atomic_parsley_path, file_path, "--overWrite", "--description", description]
-        self._run_command(cmd)
-
     def get_day(self, metadata):
         # Extrahieren des Datums aus den Metadaten
         for line in metadata.split('\n'):
@@ -95,6 +95,16 @@ class MetadataManager:
         # Zeit hinzufügen
         return date_str + "T12:00:00Z"
 
+class MetadataWriter(MetadataManager):
+
+    def __init__(self, logger):
+        super().__init__(logger)
+
+    def overwrite_description(self, file_path, description):
+        # AtomicParsley Befehl um die neue Beschreibung hinzuzufügen
+        cmd = [self._atomic_parsley_path, file_path, "--overWrite", "--description", description]
+        self._run_command(cmd)
+    
     def remove_day(self, file_path):
         """
         Entfernt das vorhandene "day"-Tag aus der Datei.

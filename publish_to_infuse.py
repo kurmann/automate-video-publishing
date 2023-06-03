@@ -1,7 +1,8 @@
 import sys
 import os
 import logging
-from metadata_manager import MetadataManager
+from metadata_manager import MetadataReader
+from metadata_manager import MetadataWriter
 from file_manager import FileManager
 
 def main():
@@ -15,29 +16,27 @@ def main():
         log_file_path = os.path.splitext(file_path)[0] + ".log"
         logger = setup_logger(log_file_path)
 
-        # Metdatenmanager initalisieren
-        metadata_manager = MetadataManager(logger)
-        metadata = metadata_manager.get_metadata(file_path)
-
         # Metadaten auslesen und loggen
-        metadata = metadata_manager.get_metadata(file_path)
-        metadata_manager.log_metadata(metadata)
+        metadata_reader = MetadataReader(logger)
+        metadata = metadata_reader.get_metadata(file_path)
+        metadata_reader.log_metadata(metadata)
 
         # Beschreibung kopieren
-        description = metadata_manager.get_description(metadata)
-        metadata_manager.overwrite_description(file_path, description)
+        description = metadata_reader.get_description(metadata)
+        metadata_writer = MetadataWriter(logger)
+        metadata_writer.overwrite_description(file_path, description)
 
         # Tag aus dem Dateinamen extrahieren und überschreiben
-        day = metadata_manager.get_date_from_filename(file_path)
-        metadata_manager.overwrite_day(file_path, day)
+        day = metadata_reader.get_date_from_filename(file_path)
+        metadata_writer.overwrite_day(file_path, day)
         logger.info(f"Beschreibung und Datum erfolgreich kopiert in Datei {file_path}.")
 
         # Dateimanager initalisieren
         file_manager = FileManager(logger)
 
         # Datei verschieben anhand Album und Staffelnummer
-        album = metadata_manager.get_album(metadata)
-        season = metadata_manager.get_tvsn(metadata)
+        album = metadata_reader.get_album(metadata)
+        season = metadata_reader.get_tvsn(metadata)
         target_dir = file_manager.move_file(file_path, album, season)  # Speichere das Zielverzeichnis
         logger.info(f"Datei erfolgreich in das Verzeichnis {target_dir} verschoben.")
 
