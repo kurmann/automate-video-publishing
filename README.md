@@ -21,4 +21,4 @@ Dieses Python-Projekt zielt darauf ab, den Prozess der Veröffentlichung von MP4
 Führen Sie das Hauptskript `publishing_to_infuse.py` mit dem Pfad zur zu verarbeitenden MP4-Datei als Argument aus. Zum Beispiel: `python publishing_to_infuse.py /path/to/your/video.mp4`
 
 ## Lizenz
-Dieses Projekt ist lizenziert unter der MIT-Lizenz. Siehe [LICENSE](LICENSE) für weitere Informationen.
+Dieses Projekt ist lizenziert unter der MIT-Lizenz. Siehe [LICENSE](LICENSE.txt) für weitere Informationen.
