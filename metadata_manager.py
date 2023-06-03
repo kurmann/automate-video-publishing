@@ -3,16 +3,31 @@ import subprocess
 import os
 from datetime import datetime
 
-class MetadataManager:
+import subprocess
+import sys
 
+class MetadataManager:
+    """
+    Die Klasse MetadataManager dient zum Ausführen von AtomicParsley-Befehlen und zum Protokollieren von Metadaten.
+    """
     # Der Pfad zu AtomicParsley
     _atomic_parsley_path = "/usr/local/bin/AtomicParsley"
 
     def __init__(self, logger):
+        """
+        Initialisiert den MetadataManager.
+
+        :param logger: Logger-Instanz für die Protokollierung.
+        """
         self.logger = logger
 
-    # Private Hilfsfunktion, um Befehle auszuführen und die Ausgabe als Zeichenkette zu erhalten
     def _run_command(self, cmd):
+        """
+        Führt den übergebenen Befehl aus und gibt die Ausgabe als Zeichenkette zurück.
+
+        :param cmd: Der auszuführende Befehl.
+        :return: Die Ausgabe des Befehls.
+        """
         try:
             return subprocess.run(cmd, check=True, text=True, capture_output=True).stdout
         except subprocess.CalledProcessError as e:
@@ -20,65 +35,79 @@ class MetadataManager:
             sys.exit(1)
 
     def log_metadata(self, metadata):
-        # Logging der Metadaten
+        """
+        Protokolliert die übergebenen Metadaten.
+
+        :param metadata: Die zu protokollierenden Metadaten.
+        """
         self.logger.info("Folgende MP4-Metadaten wurden aus der Quelldatei ausgelesen.")
         for line in metadata.split('\n'):
             self.logger.info(line)
-    
-class MetadataReader(MetadataManager):
 
+class MetadataNotFoundException(Exception):
+    """
+    Eine benutzerdefinierte Exception, die ausgelöst wird, wenn ein erwartetes Metadatum nicht gefunden wird.
+    """
+    pass
+
+class InvalidDateFormatException(Exception):
+    """
+    Eine benutzerdefinierte Exception, die ausgelöst wird, wenn das Datum im Dateinamen nicht im erwarteten Format ist.
+    """
+    pass
+
+class MetadataReader(MetadataManager):
+    """
+    Eine Unterklasse von MetadataManager, die spezifisch für das Lesen von Metadaten ist.
+    """
     def __init__(self, logger):
         super().__init__(logger)
 
     def get_metadata(self, file_path):
-        # AtomicParsley Befehl um alle Metadaten auszulesen
+        """
+        Ruft alle Metadaten von der angegebenen Datei ab.
+        """
         cmd = [self._atomic_parsley_path, file_path, "-t"]
-        metadata = self._run_command(cmd)
+        return self._run_command(cmd)
 
-        return metadata
+    def _get_metadata_value(self, metadata, atom):
+        """
+        Eine private Methode zum Abrufen eines spezifischen Metadatenwerts.
+        """
+        for line in metadata.split('\n'):
+            if line.startswith(f'Atom "{atom}" contains: '):
+                return line[len(f'Atom "{atom}" contains: '):].strip()
+        raise MetadataNotFoundException(f"Kein Wert für Atom '{atom}' gefunden.")
 
     def get_description(self, metadata):
-        # Extrahieren der Beschreibung aus den Metadaten
-        for line in metadata.split('\n'):
-            if line.startswith('Atom "©des" contains: '):
-                return line[len('Atom "©des" contains: '):].strip()
-        else:
-            raise ValueError("Keine Beschreibung gefunden.")
+        """
+        Ruft die Beschreibung aus den Metadaten ab.
+        """
+        return self._get_metadata_value(metadata, '©des')
 
     def get_tvsn(self, metadata):
-        # Extrahieren der Staffelnummer aus den Metadaten
-        for line in metadata.split('\n'):
-            if line.startswith('Atom "tvsn" contains: '):
-                return line[len('Atom "tvsn" contains: '):].strip()
-        else:
-            print("Fehler: Keine Staffelnummer gefunden.")
-            sys.exit(1)
+        """
+        Ruft die TV-Seriennummer aus den Metadaten ab.
+        """
+        return self._get_metadata_value(metadata, 'tvsn')
 
     def get_album(self, metadata):
-        # Extrahieren des Albums aus den Metadaten
-        for line in metadata.split('\n'):
-            if line.startswith('Atom "©alb" contains: '):
-                return line[len('Atom "©alb" contains: '):].strip()
-        else:
-            print("Fehler: Kein Album gefunden.")
-            self.logger.error("Kein Album gefunden.")
-            self.logger.info("Der Albumname wird benötigt um das Zielverzeichnis zu bestimmen.")
-            sys.exit(1)
+        """
+        Ruft das Album aus den Metadaten ab.
+        """
+        return self._get_metadata_value(metadata, '©alb')
 
     def get_day(self, metadata):
-        # Extrahieren des Datums aus den Metadaten
-        for line in metadata.split('\n'):
-            if line.startswith('Atom "©day" contains: '):
-                day = line[len('Atom "©day" contains: '):].strip()
-                if 'T' in day:  # Datum enthält bereits eine Zeitangabe
-                    return day
-                else:  # Datum enthält keine Zeitangabe, also fügen wir eine hinzu
-                    return day + "T12:00:00Z"
-        else:
-            self.logger.error("Kein Datum gefunden.")
-            sys.exit(1)
+        """
+        Ruft das Datum aus den Metadaten ab und fügt ggf. eine Zeitangabe hinzu.
+        """
+        day = self._get_metadata_value(metadata, '©day')
+        return day if 'T' in day else day + "T12:00:00Z"
 
     def get_date_from_filename(self, file_path):
+        """
+        Ruft das Datum aus dem Dateinamen der angegebenen Datei ab.
+        """
         # Extrahieren des Dateinamens aus dem vollständigen Pfad
         filename = os.path.basename(file_path)
         
@@ -89,41 +118,77 @@ class MetadataReader(MetadataManager):
         try:
             datetime.strptime(date_str, "%Y-%m-%d")
         except ValueError:
-            self.logger.error("Datum im Dateinamen {filename} ist nicht im korrekten Format.")
-            sys.exit(1)
+            raise InvalidDateFormatException(f"Datum im Dateinamen {filename} ist nicht im korrekten Format.")
         
         # Zeit hinzufügen
         return date_str + "T12:00:00Z"
 
-class MetadataWriter(MetadataManager):
+class MetadataWriter:
+
+    _atomic_parsley_path = "/usr/local/bin/AtomicParsley"
 
     def __init__(self, logger):
-        super().__init__(logger)
+        """Initializes the MetadataWriter with the logger to be used.
+
+        Args:
+            logger: A logger to log information and errors.
+        """
+        self.logger = logger
+
+    def _run_command(self, cmd):
+        """Executes a command and returns the output as a string.
+
+        Args:
+            cmd: List of command strings.
+        Returns:
+            The stdout of the command execution as a string.
+        """
+        try:
+            return subprocess.run(cmd, check=True, text=True, capture_output=True).stdout
+        except subprocess.CalledProcessError as e:
+            self.logger.error(f"An error occurred while executing the command {cmd}: {e}")
+            sys.exit(1)
 
     def overwrite_description(self, file_path, description):
-        # AtomicParsley Befehl um die neue Beschreibung hinzuzufügen
+        """Writes a new description to a file's metadata.
+
+        Args:
+            file_path: Path of the file.
+            description: Description to write to the file's metadata.
+        """
         cmd = [self._atomic_parsley_path, file_path, "--overWrite", "--description", description]
         self._run_command(cmd)
-    
+
     def remove_day(self, file_path):
-        """
-        Entfernt das vorhandene "day"-Tag aus der Datei.
+        """Removes the "day" tag from a file's metadata.
+
+        Args:
+            file_path: Path of the file.
         """
         cmd = [self._atomic_parsley_path, file_path, "--overWrite", "--manualAtomRemove", "moov.udta.meta.ilst.©day"]
         self._run_command(cmd)
 
     def check_and_modify_date(self, date_str):
-        # Überprüfen, ob die Zeit im Datum enthalten ist, falls nicht, Mittag hinzufügen
+        """Verifies a date string format and adds the time if not present.
+
+        Args:
+            date_str: Date string to check and modify.
+        Returns:
+            Modified date string with added time if it was not present.
+        """
         try:
-            datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%SZ")  # versuchen, das Datum mit der Zeit zu parsen
+            datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%SZ")
         except ValueError:
-            date_str += "T12:00:00Z"  # wenn das Parsen fehlschlägt, die Zeit hinzufügen
+            date_str += "T12:00:00Z"
         return date_str
 
     def overwrite_day(self, file_path, day):
+        """Writes a new day to a file's metadata.
+
+        Args:
+            file_path: Path of the file.
+            day: Day to write to the file's metadata.
         """
-        Fügt das "day"-Tag zur Datei hinzu.
-        """
-        self.remove_day(file_path)  # Zuerst entfernen wir das alte Tag.
+        self.remove_day(file_path)
         cmd = [self._atomic_parsley_path, file_path, "--overWrite", "--year", day]
         self._run_command(cmd)
