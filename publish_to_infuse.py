@@ -4,6 +4,7 @@ import logging
 from metadata_manager import MetadataReader
 from metadata_manager import MetadataWriter
 from file_manager import FileManager
+from mac_os_interface import NotificationManager
 
 def main():
     """Main function that drives the script."""
@@ -38,6 +39,10 @@ def main():
         season = metadata_reader.get_tvsn(metadata)
         target_dir = file_manager.move_file(file_path, album, season)  # Save the target directory
         logger.info(f"Successfully moved file to directory {target_dir}.")
+
+        # Benachrichtigung senden Testlauf
+        notifier = NotificationManager("Automatisierung Videoveröffentlichung")
+        notifier.send_notification(f"Successfully moved file to directory {target_dir}.")
 
     except Exception as e:
         sys.stderr.write(str(e))
