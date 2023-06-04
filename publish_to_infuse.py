@@ -5,6 +5,8 @@ from metadata_manager import MetadataReader
 from metadata_manager import MetadataWriter
 from file_manager import FileManager
 from mac_os_interface import NotificationManager
+from mac_os_interface import SecureKeyring
+from mac_os_interface import KeyNotFoundError
 
 def main():
     """Main function that drives the script."""
@@ -40,14 +42,20 @@ def main():
         target_dir = file_manager.move_file(file_path, album, season)  # Save the target directory
         logger.info(f"Successfully moved file to directory {target_dir}.")
 
+        # Verwendung der SecureKeyring-Klasse zum Test
+        keyring_instance = SecureKeyring(logger, 'aws-s3-script')
+        aws_secret_access_key = keyring_instance.get_key()
+
         # Benachrichtigung senden Testlauf
         notifier = NotificationManager("Automatisierung Videoveröffentlichung")
-        notifier.send_notification(f"Successfully moved file to directory {target_dir}.")
+        # notifier.send_notification(f"Successfully moved file to directory {target_dir}.")
+    
+    except KeyNotFoundError as e:
+        logger.error(str(e))
 
     except Exception as e:
-        sys.stderr.write(str(e))
+        print(str(e))
         sys.exit(1)
-
 
 def setup_logger(log_file_path):
     """Sets up a logger that writes logs to a file.
@@ -59,12 +67,20 @@ def setup_logger(log_file_path):
     """
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
-    handler = logging.FileHandler(log_file_path)
-    formatter = logging.Formatter('%(asctime)s %(levelname)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
-    return logger
 
+    # File handler
+    file_handler = logging.FileHandler(log_file_path)
+    file_formatter = logging.Formatter('%(asctime)s %(levelname)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+    file_handler.setFormatter(file_formatter)
+    logger.addHandler(file_handler)
+
+    # Console handler
+    console_handler = logging.StreamHandler(sys.stdout)
+    console_formatter = logging.Formatter('%(asctime)s %(levelname)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+    console_handler.setFormatter(console_formatter)
+    logger.addHandler(console_handler)
+
+    return logger
 
 if __name__ == "__main__":
     main()
