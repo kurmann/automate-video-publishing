@@ -1,4 +1,5 @@
 # The first argument is the path of the file
+# Use ´$1´as file name if file is passed by Apple Automator
 FILE="" # Example: /Volumes/Videos/Archive/Movie.m4v
 BUCKET="" # The AWS bucket name
 TARGET_DIR="" # Example: Archive/2023
@@ -21,6 +22,7 @@ KEY="$TARGET_DIR/$FILENAME"
 
     # Generate the MD5 hash of the file
     HASH=$(md5 -q "$FILE")
+    echo Local hash value: $HASH
 
     # Upload the file to S3, adding the hash as metadata
     aws s3 cp "${FILE}" "s3://${BUCKET}/${KEY}" --metadata "md5hash=${HASH}"
@@ -31,10 +33,12 @@ KEY="$TARGET_DIR/$FILENAME"
 
     # Extract the stored hash from the metadata
     STORED_HASH=$(echo $METADATA | jq -r .Metadata.md5hash)
+    echo Stored hash value of uploaded AWS file: $STORED_HASH
 
     # Compare the stored hash with the hash of the file
     if [ "$HASH" == "$STORED_HASH" ]; then
         # The file is intact. Delete the local file.
+        echo Hash values of AWS and local file are equal. Delete the local file to complete the archiving process.
         rm "$FILE"
         # Send a notification to the user
         osascript -e 'display notification "Die Datei wurde erfolgreich hochgeladen und lokal gelöscht." with title "Archivierung erfolgreich"'
