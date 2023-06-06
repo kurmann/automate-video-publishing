@@ -16,6 +16,15 @@ KEY="$TARGET_DIR/$FILENAME"
     AWS_ACCESS_KEY_ID=$(security find-generic-password -s archive-to-aws-access-key-keychain-keyname -w)
     AWS_SECRET_ACCESS_KEY=$(security find-generic-password -s archive-to-aws-secret-key-keychain-keyname -w)
 
+    # Check if the access key and secret key were retrieved successfully
+    if [[ -z "$AWS_ACCESS_KEY_ID" || -z "$AWS_SECRET_ACCESS_KEY" ]]; then
+        echo "Fehler: Konnte AWS-Zugriffs- oder Geheimschlüssel nicht aus dem Schlüsselbund auslesen."
+        osascript -e "display notification \"Fehler: Konnte AWS-Zugriffs- oder Geheimschlüssel nicht aus dem Schlüsselbund auslesen. Das Skript wurde beendet.\" with title \"Fehler beim Auslesen der AWS-Schlüssel\""
+        exit 1
+    else
+        echo "Erfolgreich AWS-Zugriffs- und Geheimschlüssel aus dem Schlüsselbund ausgelesen."
+    fi
+
     # Export the keys as environment variables
     export AWS_ACCESS_KEY_ID
     export AWS_SECRET_ACCESS_KEY
@@ -25,6 +34,7 @@ KEY="$TARGET_DIR/$FILENAME"
     echo Local hash value: $HASH
 
     # Upload the file to S3, adding the hash as metadata
+    echo Beginne mit dem Upload...
     aws s3 cp "${FILE}" "s3://${BUCKET}/${KEY}" --metadata "md5hash=${HASH}"
 
     # Get the object metadata
