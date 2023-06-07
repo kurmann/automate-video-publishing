@@ -23,8 +23,21 @@ Führen Sie das Hauptskript `publishing_to_infuse.py` mit dem Pfad zur zu verarb
 ## Lizenz
 Dieses Projekt ist lizenziert unter der MIT-Lizenz. Siehe [LICENSE](LICENSE.txt) für weitere Informationen.
 
-## Entscheidungsmatrix Python zu .NET
+## Wechsel von Python zu .NET
 Überlegungen vom 7. Juni 2023 von Python auf das .NET-Framework zu wechseln
+
+### Beweggründe
+Bei der Entscheidung für eine Programmiersprache zur Implementierung des Skripts wurden sowohl Python als auch .NET Core in Betracht gezogen. Beide haben ihre Stärken und bieten umfangreiche Funktionen zur Bewältigung der geplanten Aufgaben.
+
+Ein wichtiger Aspekt, der zur Wahl von .NET Core beigetragen hat, ist die Fähigkeit zur Erstellung einer eigenständigen, ausführbaren Datei, die ohne zusätzliche Abhängigkeiten auf verschiedenen Plattformen läuft. Dieser Aspekt der Portabilität und Bereitstellung war entscheidend, da das Ziel darin besteht, das Skript zu entwickeln und auf anderen Maschinen bereitzustellen, ohne zusätzliche Setup-Anforderungen zu haben.
+
+Python, obwohl eine sehr flexible und mächtige Sprache, hat gewisse Herausforderungen in Bezug auf die Erstellung von eigenständigen, ausführbaren Dateien. Während es Werkzeuge wie PyInstaller oder py2exe gibt, die Python-Skripte in ausführbare Dateien umwandeln können, bringen diese ihre eigenen Einschränkungen und Kompatibilitätsprobleme mit sich. Dies kann besonders problematisch sein, wenn das Skript von verschiedenen Personen auf unterschiedlichen Systemen verwendet wird.
+
+Darüber hinaus kann das Management von Paketabhängigkeiten in Python auf verschiedenen Maschinen eine zusätzliche Herausforderung darstellen, insbesondere wenn es darum geht, das Skript auf einem anderen Rechner bereitzustellen.
+
+Mit .NET Core können diese potenziellen Hürden vermieden werden, was es zu einer attraktiven Wahl für das Projekt macht. Zudem bietet .NET Core eine starke Leistung und eine umfangreiche Standardbibliothek, was zusätzlich zu den oben genannten Vorteilen den Ausschlag zugunsten von .NET Core gegeben hat.
+
+### Entscheidungsmatrix
 
 | Kriterium                     | Gewichtung | Python Bewertung[^1] | .NET Bewertung[^2] | Gewichtete Python Bewertung | Gewichtete .NET Bewertung |
 |-------------------------------|------------|------------------|----------------|-----------------------------|---------------------------|
