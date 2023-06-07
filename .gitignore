@@ -161,3 +161,81 @@ cython_debug/
 #  and can be added to the global gitignore or merged into this file.  For a more nuclear
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
+
+# .NET related
+*.dll
+*.exe
+*.winmd
+*.pdb
+*.mdb
+*.pri
+
+# Build results
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+
+# Visual Studio cache/options directory
+.vs/
+
+# Logs
+*.log
+
+# User-specific files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Test Results
+TestResults/
+
+# .NET Core
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# NuGet packages
+*.nupkg
+# The packages folder can be ignored because of Package Restore
+**/[Pp]ackages/*
+# except build/, which is used as an MSBuild target.
+!**/[Pp]ackages/build/
+# Uncomment if necessary however generally it will be regenerated when needed
+#!**/[Pp]ackages/repositories.config
+
+# Azure Artifacts
+!.nuget/packages/
+
+# NuGet Symbol Packages
+*.snupkg
+
+# Ignore JetBrains Rider configuration
+.idea/
+*.DotSettings.user
+
+# Interactive Visual Studio Project Scripting
+*.lsproj
+
+# Performance analysis files
+*.diagsession
+*.trace
+*.dotTrace
+*.dotMemory
+
+# Rider
+.idea/
+*.DotSettings.user
+
+# User-specific files (MonoDevelop/Xamarin Studio)
+*.userprefs
+
+# OS generated files #
+######################
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
