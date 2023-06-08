@@ -239,3 +239,6 @@ artifacts/
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# Visual Studio Files like launch settings
+.vscode/
