@@ -3,6 +3,8 @@ using AutomateVideoPublishing.Models;
 using MetadataExtractor;
 using MetadataExtractor.Formats.QuickTime;
 
+namespace AutomateVideoPublishing.Services;
+
 public class MetadataService {
 
     public void ReadQuicktimeMetadata(Options opts)

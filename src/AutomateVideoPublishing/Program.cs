@@ -1,5 +1,8 @@
 ﻿using AutomateVideoPublishing.Models;
+using AutomateVideoPublishing.Services;
 using CommandLine;
+
+namespace AutomateVideoPublishing;
 
 partial class Program
 {
