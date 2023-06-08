@@ -5,7 +5,8 @@ using MetadataExtractor.Formats.QuickTime;
 
 namespace AutomateVideoPublishing.Services;
 
-public class MetadataService {
+public class MetadataService
+{
 
     public void ReadQuicktimeMetadata(Options opts)
     {
@@ -18,8 +19,14 @@ public class MetadataService {
                 .Select(tag => new MetadataTag { Name = tag.Name, Description = tag.Description })
                 .ToList();
 
-            var json = JsonSerializer.Serialize(quickTimeMetadataTags, new JsonSerializerOptions { WriteIndented = true });
+            var options = new JsonSerializerOptions
+            {
+                WriteIndented = true,
+                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+            };
+            var json = JsonSerializer.Serialize(quickTimeMetadataTags, options);
             Console.WriteLine(json);
+
         }
         else
         {
