@@ -22,8 +22,27 @@ class Program
 
         if (opts.ReadMetadata)
         {
-            var metadataService = new MetadataService();
-            metadataService.ReadQuicktimeMetadata(opts);
+            if (opts.File == null)
+            {
+                Console.WriteLine("File-Parameter ist leer.");
+                return;
+            }
+            else
+            {
+                var metadataService = new MetadataService();
+
+                try
+                {
+                    var quickTimeMetaData = metadataService.TryGetQuickTimeMetadata(opts.File);
+                    Console.WriteLine(JsonService.GetFormattedUnicodeJson(quickTimeMetaData));
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error on trying to get QuickTime metadata: {ex.Message}");
+                    return;
+                }
+            }
+
         }
     }
 }
