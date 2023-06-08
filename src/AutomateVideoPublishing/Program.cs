@@ -4,7 +4,7 @@ using CommandLine;
 
 namespace AutomateVideoPublishing;
 
-partial class Program
+class Program
 {
     static void Main(string[] args)
     {

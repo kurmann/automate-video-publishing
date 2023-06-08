@@ -10,6 +10,11 @@ public class MetadataService
 
     public void ReadQuicktimeMetadata(Options opts)
     {
+        if (opts.File == null)
+        {
+            Console.WriteLine("File-Parameter ist leer.");
+            return;
+        }
         var directories = ImageMetadataReader.ReadMetadata(opts.File);
         var quickTimeMetadata = directories.OfType<QuickTimeMetadataHeaderDirectory>().FirstOrDefault();
 
