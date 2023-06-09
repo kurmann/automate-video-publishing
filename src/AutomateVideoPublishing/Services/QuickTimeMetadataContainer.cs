@@ -1,8 +1,6 @@
 using MetadataExtractor;
 using MetadataExtractor.Formats.QuickTime;
 using Services.FileService;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace Services.MetadataService
 {
@@ -12,16 +10,6 @@ namespace Services.MetadataService
     /// </summary>
     public class QuickTimeMetadataContainer
     {
-        /// <summary>
-        /// Die Beschreibung der QuickTime-Datei. Wird aus den Metadaten gelesen.
-        /// </summary>
-        public string Description { get => RawMetadata["Description"]; }
-
-        /// <summary>
-        /// Der Name der QuickTime-Datei. Wird aus den Metadaten gelesen.
-        /// </summary>
-        public string Name { get => RawMetadata["Name"]; }
-
         /// <summary>
         /// Enthält die Rohmetadaten, die aus der Datei gelesen wurden.
         /// </summary>
@@ -37,7 +25,7 @@ namespace Services.MetadataService
 
             if (fileContainer.FileType != FileType.Mpeg4)
             {
-                throw new ArgumentException("Error: FileContainer does not reference a MP4 file.");
+                throw new ArgumentException("Error: FileContainer does not reference a MPEG-4 (.mv4 / .mp4) file.");
             }
 
             RawMetadata = TryGetQuickTimeMetadata(fileContainer.File.FullName);
@@ -59,13 +47,36 @@ namespace Services.MetadataService
         }
 
         /// <summary>
+        /// Gibt den Namen aus den Metadaten zurück, falls vorhanden, sonst einen leeren String.
+        /// </summary>
+        public string GetNameOrEmpty()
+        {
+            if (RawMetadata.TryGetValue("Name", out var name))
+            {
+                return name ?? string.Empty;
+            }
+
+            return string.Empty;
+        }
+
+        /// <summary>
+        /// Gibt die Beschreibung aus den Metadaten zurück, falls vorhanden, sonst einen leeren String.
+        /// </summary>
+        public string GetDescriptionOrEmpty()
+        {
+            if (RawMetadata.TryGetValue("Description", out var description))
+            {
+                return description ?? string.Empty;
+            }
+
+            return string.Empty;
+        }
+
+        /// <summary>
         /// Factory-Methode, die eine neue QuickTimeMetadataContainer-Instanz erstellt und zurückgibt.
         /// </summary>
         /// <param name="fileContainer">Der FileContainer, der die zu analysierende Datei enthält.</param>
         /// <returns>Eine neue Instanz von QuickTimeMetadataContainer.</returns>
-        public static QuickTimeMetadataContainer Create(FileContainer fileContainer)
-        {
-            return new QuickTimeMetadataContainer(fileContainer);
-        }
+        public static QuickTimeMetadataContainer Create(FileContainer fileContainer) => new QuickTimeMetadataContainer(fileContainer);
     }
 }
