@@ -1,6 +1,7 @@
 using MetadataExtractor;
 using MetadataExtractor.Formats.QuickTime;
 using Services.FileService;
+using CSharpFunctionalExtensions;
 
 namespace Services.MetadataService
 {
@@ -16,22 +17,12 @@ namespace Services.MetadataService
         public IReadOnlyDictionary<string, string?> RawMetadata { get; }
 
         // Privater Konstruktor, der nur innerhalb dieser Klasse aufgerufen werden kann.
-        private QuickTimeMetadataContainer(FileContainer fileContainer)
+        private QuickTimeMetadataContainer(IReadOnlyDictionary<string, string?> rawMetadata)
         {
-            if (fileContainer == null)
-            {
-                throw new ArgumentNullException("Error: FileContainer is null.");
-            }
-
-            if (fileContainer.FileType != FileType.Mpeg4)
-            {
-                throw new ArgumentException("Error: FileContainer does not reference a MPEG-4 (.mv4 / .mp4) file.");
-            }
-
-            RawMetadata = TryGetQuickTimeMetadata(fileContainer.File.FullName);
+            RawMetadata = rawMetadata;
         }
 
-        private Dictionary<string, string?> TryGetQuickTimeMetadata(string filePath)
+        private static Result<IReadOnlyDictionary<string, string?>> TryGetQuickTimeMetadata(string filePath)
         {
             var directories = ImageMetadataReader.ReadMetadata(filePath);
 
@@ -39,11 +30,12 @@ namespace Services.MetadataService
 
             if (quickTimeMetadata != null)
             {
-                return quickTimeMetadata.Tags
+                var metadataDict = quickTimeMetadata.Tags
                     .ToDictionary(tag => tag.Name, tag => tag.Description);
+                return Result.Success((IReadOnlyDictionary<string, string?>)metadataDict);
             }
 
-            return new Dictionary<string, string?>();
+            return Result.Failure<IReadOnlyDictionary<string, string?>>("QuickTime metadata not found");
         }
 
         /// <summary>
@@ -76,7 +68,27 @@ namespace Services.MetadataService
         /// Factory-Methode, die eine neue QuickTimeMetadataContainer-Instanz erstellt und zurückgibt.
         /// </summary>
         /// <param name="fileContainer">Der FileContainer, der die zu analysierende Datei enthält.</param>
-        /// <returns>Eine neue Instanz von QuickTimeMetadataContainer.</returns>
-        public static QuickTimeMetadataContainer Create(FileContainer fileContainer) => new QuickTimeMetadataContainer(fileContainer);
+        /// <returns>Ein Result, das entweder eine neue Instanz von QuickTimeMetadataContainer enthält oder einen Fehler.</returns>
+        public static Result<QuickTimeMetadataContainer> Create(FileContainer fileContainer)
+        {
+            if (fileContainer == null)
+            {
+                return Result.Failure<QuickTimeMetadataContainer>("FileContainer is null");
+            }
+
+            if (fileContainer.FileType != FileType.Mpeg4)
+            {
+                return Result.Failure<QuickTimeMetadataContainer>("FileContainer does not reference a MP4 file");
+            }
+
+            var metadataResult = TryGetQuickTimeMetadata(fileContainer.File.FullName);
+
+            if (metadataResult.IsFailure)
+            {
+                return Result.Failure<QuickTimeMetadataContainer>(metadataResult.Error);
+            }
+
+            return Result.Success(new QuickTimeMetadataContainer(metadataResult.Value));
+        }
     }
 }
