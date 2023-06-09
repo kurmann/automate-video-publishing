@@ -29,11 +29,11 @@ class Program
             }
             else
             {
-                var metadataService = new MetadataService();
+                var metadataService = new MetadataService(opts.File);
 
                 try
                 {
-                    var quickTimeMetaData = metadataService.TryGetQuickTimeMetadata(opts.File);
+                    var quickTimeMetaData = metadataService.TryGetQuickTimeMetadata();
                     Console.WriteLine(JsonService.GetFormattedUnicodeJson(quickTimeMetaData));
                 }
                 catch (Exception ex)

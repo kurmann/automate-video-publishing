@@ -1,14 +1,26 @@
 using AutomateVideoPublishing.Models;
 using MetadataExtractor;
 using MetadataExtractor.Formats.QuickTime;
+using TagLib;
 
 namespace AutomateVideoPublishing.Services;
 
 public class MetadataService
 {
-    public List<MetadataTag> TryGetQuickTimeMetadata(string file)
+    private string m_file;
+
+    public MetadataService(string file, string targetFile = "")
     {
-        var directories = ImageMetadataReader.ReadMetadata(file);
+        if (string.IsNullOrEmpty(file))
+        {
+            throw new ArgumentOutOfRangeException("Cannot init MetadataService due to missing file path");
+        }
+        m_file = file;
+    }
+
+    public List<MetadataTag> TryGetQuickTimeMetadata()
+    {
+        var directories = ImageMetadataReader.ReadMetadata(m_file);
  
         var quickTimeMetadata = directories.OfType<QuickTimeMetadataHeaderDirectory>().FirstOrDefault();
 
@@ -21,5 +33,10 @@ public class MetadataService
             return quickTimeMetadataTags;
         }
         return new List<MetadataTag>();
+    }
+
+    public void SetMp4Metadata(string description)
+    {
+
     }
 }
