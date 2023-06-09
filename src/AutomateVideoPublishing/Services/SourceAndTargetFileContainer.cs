@@ -7,8 +7,18 @@ namespace Services.FileService;
 /// </summary>
 public class SourceAndTargetFileContainer
 {
+    /// <summary>
+    /// Die Quelldatei, von der Metadaten gelesen werden. 
+    /// Es muss eine .mov Datei sein.
+    /// </summary>
     public FileInfo Source { get; private set; }
+
+    /// <summary>
+    /// Die Ziel-Datei, in die Metadaten geschrieben werden.
+    /// Es muss eine .m4v oder .mp4 Datei sein.
+    /// </summary>
     public FileInfo Target { get; private set; }
+
 
     // Privater Konstruktor, der nur innerhalb dieser Klasse aufgerufen werden kann.
     private SourceAndTargetFileContainer(string sourceFile, string targetFile)
@@ -24,11 +34,11 @@ public class SourceAndTargetFileContainer
         }
 
         string sourceExtension = Path.GetExtension(sourceFile);
-        string targetExtension = Path.GetExtension(targetFile);
+        string targetExtension = Path.GetExtension(targetFile).ToLower();
 
-        if (sourceExtension.ToLower() != ".mov" || targetExtension.ToLower() != ".m4v")
+        if (sourceExtension.ToLower() != ".mov" || (targetExtension != ".m4v" && targetExtension != ".mp4"))
         {
-            throw new ArgumentException($"Error: Source file must be a .mov file and target file must be a .m4v file.");
+            throw new ArgumentException($"Error: Source file must be a .mov file and target file must be a .m4v or .mp4 file.");
         }
 
         // Speichern der Dateien als Eigenschaften
