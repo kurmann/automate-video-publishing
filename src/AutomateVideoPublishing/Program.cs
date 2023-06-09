@@ -18,14 +18,9 @@ class Program
         if (opts.ReadMetadata)
         {
             var formattedUnicodeJsonResult = QuickTimeMetadataContainer.Create(opts.File)
-                .Bind(quickTimeMetadataContainer => FormattedUnicodeJson.Create(quickTimeMetadataContainer.RawMetadata));
-            
-            if (formattedUnicodeJsonResult.IsFailure)
-            {
-                Console.WriteLine($"Error on trying to get QuickTime metadata: {formattedUnicodeJsonResult.Error}");
-            }
-
-            Console.WriteLine(formattedUnicodeJsonResult.Value);
+                .Bind(quickTimeMetadataContainer => FormattedUnicodeJson.Create(quickTimeMetadataContainer.RawMetadata)
+                .Tap(formattedUnicodeJson => Console.WriteLine(formattedUnicodeJson)))
+                .TapError(error => Console.WriteLine($"Error on trying to get QuickTime metadata: {error}"));
         }
     }
 
