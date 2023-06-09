@@ -40,8 +40,13 @@ public class FileInfoContainer
     /// </summary>
     /// <param name="filePath">Pfad zur Datei, die als Eigenschaft gespeichert werden soll.</param>
     /// <returns>Eine Result-Instanz, die entweder eine FileInfoContainer-Instanz oder eine Fehlermeldung enthält.</returns>
-    public static Result<FileInfoContainer> Create(string filePath)
+    public static Result<FileInfoContainer> Create(string? filePath)
     {
+        if (filePath == null)
+        {
+            return Result.Failure<FileInfoContainer>("File path is null");
+        }
+
         var file = new FileInfo(filePath);
 
         if (file == null)

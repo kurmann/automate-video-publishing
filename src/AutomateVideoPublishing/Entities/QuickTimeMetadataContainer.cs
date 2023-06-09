@@ -75,9 +75,9 @@ public class QuickTimeMetadataContainer
             return Result.Failure<QuickTimeMetadataContainer>("FileContainer is null");
         }
 
-        if (fileInfoContainer.FileType != FileType.Mpeg4)
+        if (fileInfoContainer.FileType != FileType.QuickTimeMov)
         {
-            return Result.Failure<QuickTimeMetadataContainer>("FileContainer does not reference a MP4 file");
+            return Result.Failure<QuickTimeMetadataContainer>("FileContainer does not reference a QuickTime movie file");
         }
 
         var metadataResult = TryGetQuickTimeMetadata(fileInfoContainer.File.FullName);

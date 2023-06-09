@@ -1,6 +1,7 @@
-﻿using AutomateVideoPublishing.Models;
-using AutomateVideoPublishing.Services;
+﻿using AutomateVideoPublishing.Entities;
+using AutomateVideoPublishing.Models;
 using CommandLine;
+using CSharpFunctionalExtensions;
 
 namespace AutomateVideoPublishing;
 
@@ -14,35 +15,16 @@ class Program
 
     static void RunCommand(Options opts)
     {
-        if (opts.File == null)
-        {
-            Console.WriteLine("Datei-Parameter wurde nicht angegeben.");
-            return;
-        }
-
         if (opts.ReadMetadata)
         {
-            if (opts.File == null)
-            {
-                Console.WriteLine("File-Parameter ist leer.");
-                return;
-            }
-            else
-            {
-                var metadataService = new MetadataService(opts.File);
+            var fileInfoResult = FileInfoContainer.Create(opts.File);
 
-                try
-                {
-                    var quickTimeMetaData = metadataService.TryGetQuickTimeMetadata();
-                    Console.WriteLine(JsonService.GetFormattedUnicodeJson(quickTimeMetaData));
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error on trying to get QuickTime metadata: {ex.Message}");
-                    return;
-                }
-            }
-
+            fileInfoResult
+                .Check(fileInfoContainer => QuickTimeMetadataContainer.Create(fileInfoContainer)
+                .Bind(quickTimeMetadataContainer => FormattedUnicodeJson.Create(quickTimeMetadataContainer.RawMetadata))
+                .Tap(formattedJson => Console.WriteLine(formattedJson))
+                .TapError(error => Console.WriteLine($"Error on trying to get QuickTime metadata: {error}")));
         }
     }
+
 }
