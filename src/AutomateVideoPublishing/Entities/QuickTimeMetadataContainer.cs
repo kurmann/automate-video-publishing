@@ -21,9 +21,9 @@ public class QuickTimeMetadataContainer
         RawMetadata = rawMetadata;
     }
 
-    private static Result<IReadOnlyDictionary<string, string?>> TryGetQuickTimeMetadata(string filePath)
+    private static Result<IReadOnlyDictionary<string, string?>> TryGetQuickTimeMetadata(FileInfoContainer fileInfoContainer)
     {
-        var directories = ImageMetadataReader.ReadMetadata(filePath);
+        var directories = ImageMetadataReader.ReadMetadata(fileInfoContainer.File.FullName);
 
         var quickTimeMetadata = directories.OfType<QuickTimeMetadataHeaderDirectory>().FirstOrDefault();
 
@@ -63,30 +63,13 @@ public class QuickTimeMetadataContainer
         return string.Empty;
     }
 
-    /// <summary>
-    /// Factory-Methode, die eine neue QuickTimeMetadataContainer-Instanz erstellt und zurückgibt.
-    /// </summary>
-    /// <param name="fileInfoContainer">Der FileContainer, der die zu analysierende Datei enthält.</param>
-    /// <returns>Ein Result, das entweder eine neue Instanz von QuickTimeMetadataContainer enthält oder einen Fehler.</returns>
-    public static Result<QuickTimeMetadataContainer> Create(FileInfoContainer fileInfoContainer)
+    public static Result<QuickTimeMetadataContainer> Create(string? filePath)
     {
-        if (fileInfoContainer == null)
-        {
-            return Result.Failure<QuickTimeMetadataContainer>("FileContainer is null");
-        }
+        var fileInfoContainerResult = FileInfoContainer.Create(filePath)
+            .Bind(fileInfoContainer => TryGetQuickTimeMetadata(fileInfoContainer)
+            .Map(quickTimeMetadata => new QuickTimeMetadataContainer(quickTimeMetadata)));
 
-        if (fileInfoContainer.FileType != FileType.QuickTimeMov)
-        {
-            return Result.Failure<QuickTimeMetadataContainer>("FileContainer does not reference a QuickTime movie file");
-        }
-
-        var metadataResult = TryGetQuickTimeMetadata(fileInfoContainer.File.FullName);
-
-        if (metadataResult.IsFailure)
-        {
-            return Result.Failure<QuickTimeMetadataContainer>(metadataResult.Error);
-        }
-
-        return Result.Success(new QuickTimeMetadataContainer(metadataResult.Value));
+        return fileInfoContainerResult;
     }
+
 }
