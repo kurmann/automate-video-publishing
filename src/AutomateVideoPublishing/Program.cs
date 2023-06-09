@@ -17,13 +17,15 @@ class Program
     {
         if (opts.ReadMetadata)
         {
-            var fileInfoResult = FileInfoContainer.Create(opts.File);
+            var formattedUnicodeJsonResult = QuickTimeMetadataContainer.Create(opts.File)
+                .Bind(quickTimeMetadataContainer => FormattedUnicodeJson.Create(quickTimeMetadataContainer.RawMetadata));
+            
+            if (formattedUnicodeJsonResult.IsFailure)
+            {
+                Console.WriteLine($"Error on trying to get QuickTime metadata: {formattedUnicodeJsonResult.Error}");
+            }
 
-            fileInfoResult
-                .Check(fileInfoContainer => QuickTimeMetadataContainer.Create(fileInfoContainer)
-                .Bind(quickTimeMetadataContainer => FormattedUnicodeJson.Create(quickTimeMetadataContainer.RawMetadata))
-                .Tap(formattedJson => Console.WriteLine(formattedJson))
-                .TapError(error => Console.WriteLine($"Error on trying to get QuickTime metadata: {error}")));
+            Console.WriteLine(formattedUnicodeJsonResult.Value);
         }
     }
 
