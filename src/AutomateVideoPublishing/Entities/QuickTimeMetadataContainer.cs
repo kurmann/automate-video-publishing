@@ -1,6 +1,5 @@
 using MetadataExtractor;
 using MetadataExtractor.Formats.QuickTime;
-using Services.FileService;
 using CSharpFunctionalExtensions;
 
 namespace AutomateVideoPublishing.Entities;
@@ -67,21 +66,21 @@ public class QuickTimeMetadataContainer
     /// <summary>
     /// Factory-Methode, die eine neue QuickTimeMetadataContainer-Instanz erstellt und zurückgibt.
     /// </summary>
-    /// <param name="fileContainer">Der FileContainer, der die zu analysierende Datei enthält.</param>
+    /// <param name="fileInfoContainer">Der FileContainer, der die zu analysierende Datei enthält.</param>
     /// <returns>Ein Result, das entweder eine neue Instanz von QuickTimeMetadataContainer enthält oder einen Fehler.</returns>
-    public static Result<QuickTimeMetadataContainer> Create(FileContainer fileContainer)
+    public static Result<QuickTimeMetadataContainer> Create(FileInfoContainer fileInfoContainer)
     {
-        if (fileContainer == null)
+        if (fileInfoContainer == null)
         {
             return Result.Failure<QuickTimeMetadataContainer>("FileContainer is null");
         }
 
-        if (fileContainer.FileType != FileType.Mpeg4)
+        if (fileInfoContainer.FileType != FileType.Mpeg4)
         {
             return Result.Failure<QuickTimeMetadataContainer>("FileContainer does not reference a MP4 file");
         }
 
-        var metadataResult = TryGetQuickTimeMetadata(fileContainer.File.FullName);
+        var metadataResult = TryGetQuickTimeMetadata(fileInfoContainer.File.FullName);
 
         if (metadataResult.IsFailure)
         {
