@@ -12,6 +12,7 @@
     <PackageReference Include="TagLibSharp" Version="2.3.0" />
     <PackageReference Include="MetadataExtractor" Version="2.8.0" />
     <PackageReference Include="CommandLineParser" Version="2.9.1" />
+    <PackageReference Include="CSharpFunctionalExtensions" Version="2.39.2" />
   </ItemGroup>
 
 </Project>
