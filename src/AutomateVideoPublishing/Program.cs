@@ -25,7 +25,7 @@ class Program
         var jsonResult = MediaMetadataJson.Create(file);
         if (jsonResult.IsFailure)
         {
-            Console.WriteLine($"Error reading metadata from file: {jsonResult.Value}");
+            Console.WriteLine($"Error reading metadata: {jsonResult.Error}");
             return;
         }
 

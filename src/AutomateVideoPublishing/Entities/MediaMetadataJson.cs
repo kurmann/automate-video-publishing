@@ -20,7 +20,7 @@ public class MediaMetadataJson
         var fileInfoContainerResult = MediaFileInfoContainer.Create(file);
         if (fileInfoContainerResult.IsFailure)
         {
-            return Result.Failure<MediaMetadataJson>($"Error on reading file: {file}");
+            return Result.Failure<MediaMetadataJson>($"Error on reading file: {fileInfoContainerResult.Error}");
         }
 
         return fileInfoContainerResult.Value.MediaType switch
