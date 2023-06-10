@@ -1,5 +1,6 @@
 using MetadataExtractor;
 using CSharpFunctionalExtensions;
+using System.Collections.ObjectModel;
 
 namespace AutomateVideoPublishing.Entities;
 
@@ -12,21 +13,31 @@ public class ReadOnlyMediaMetadataContainer
     /// <summary>
     /// Contains the raw metadata read from the file.
     /// </summary>
-    public IReadOnlyList<MetadataExtractor.Directory> RawMetadata { get; }
+    public List<IReadOnlyDictionary<string, string?>> RawMetadata { get; }
 
     // Private constructor that can only be called within this class.
-    private ReadOnlyMediaMetadataContainer(IReadOnlyList<MetadataExtractor.Directory> rawMetadata) => RawMetadata = rawMetadata;
+    private ReadOnlyMediaMetadataContainer(List<IReadOnlyDictionary<string, string?>> rawMetadata) => RawMetadata = rawMetadata;
 
-    private static Result<IReadOnlyList<MetadataExtractor.Directory>> TryGetQuickTimeMetadata(MediaFileInfoContainer fileContainer)
+    private static Result<List<IReadOnlyDictionary<string, string?>>> TryGetQuickTimeMetadata(MediaFileInfoContainer fileContainer)
     {
         try
         {
-            var directory = ImageMetadataReader.ReadMetadata(fileContainer.File.FullName);
-            return Result.Success<IReadOnlyList<MetadataExtractor.Directory>>(directory);
+            var directories = ImageMetadataReader.ReadMetadata(fileContainer.File.FullName);
+            var allTags = new List<IReadOnlyDictionary<string, string?>>();
+
+            foreach (var directory in directories)
+            {
+                var tagDictionary = new Dictionary<string, string?>(
+                    directory.Tags.ToDictionary(tag => tag.Name, tag => tag.Description)
+                );
+                allTags.Add(new ReadOnlyDictionary<string, string?>(tagDictionary));
+            }
+
+            return Result.Success<List<IReadOnlyDictionary<string, string?>>>(allTags);
         }
         catch (Exception ex)
         {
-            return Result.Failure<IReadOnlyList<MetadataExtractor.Directory>>($"Error on reading media metadata: {ex.Message}");
+            return Result.Failure<List<IReadOnlyDictionary<string, string?>>>($"Error on reading media metadata: {ex.Message}");
         }
     }
 
