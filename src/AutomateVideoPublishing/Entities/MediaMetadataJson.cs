@@ -10,13 +10,10 @@ public class MediaMetadataJson
     /// <summary>
     /// Die Metadaten der Medien-Datei als JSON-String.
     /// </summary>
-    public string Value { get; private set; }
+    public string Json { get; private set; }
 
     // Privater Konstruktor, der nur innerhalb dieser Klasse aufgerufen werden kann.
-    private MediaMetadataJson(string json)
-    {
-        Value = json;
-    }
+    private MediaMetadataJson(string json) => Json = json;
 
     public static Result<MediaMetadataJson> Create(string? file)
     {
@@ -38,5 +35,4 @@ public class MediaMetadataJson
             _ => Result.Failure<MediaMetadataJson>("Unsupported file type."),
         };
     }
-
 }
