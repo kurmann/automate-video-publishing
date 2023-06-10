@@ -60,12 +60,12 @@ public class MediaFileInfoContainer
 
         if (file == null)
         {
-            return Result.Failure<MediaFileInfoContainer>("Error on setting file: File is null.");
+            return Result.Failure<MediaFileInfoContainer>("File info object from file path is null.");
         }
 
         if (!file.Exists)
         {
-            return Result.Failure<MediaFileInfoContainer>($"Error on setting file: file {file.FullName} does not exist");
+            return Result.Failure<MediaFileInfoContainer>($"File {file.FullName} does not exist.");
         }
 
         string extension = file.Extension.ToLower();
@@ -81,7 +81,7 @@ public class MediaFileInfoContainer
         }
         else
         {
-            return Result.Failure<MediaFileInfoContainer>($"Error on setting file: file {file.FullName} is not a .mov, .m4v or .mp4 file");
+            return Result.Failure<MediaFileInfoContainer>($"File {file.FullName} is not a .mov, .m4v or .mp4 file.");
         }
     }
 }
