@@ -26,11 +26,14 @@ public class MediaMetadataJson
         return fileInfoContainerResult.Value.MediaType switch
         {
             MediaType.QuickTimeMov => QuickTimeMetadataContainer.Create(fileInfoContainerResult.Value)
-                    .Bind(quickTimeMetadataContainer => FormattedUnicodeJson.Create(quickTimeMetadataContainer.RawMetadata))
-                    .Map(formattedUnicodeJson => new MediaMetadataJson(formattedUnicodeJson.Value))
-                    .MapError(error => $"Error on trying to get QuickTime metadata: {error}"),
+                .Bind(metadataContainer => FormattedUnicodeJson.Create(metadataContainer.RawMetadata))
+                .Map(formattedUnicodeJson => new MediaMetadataJson(formattedUnicodeJson.Value))
+                .MapError(error => $"Error on trying to get QuickTime metadata: {error}"),
 
-            MediaType.Mpeg4 => Result.Failure<MediaMetadataJson>("MP4 metadata reading not yet implemented."),
+            MediaType.Mpeg4 => Mpeg4MetadataContainer.Create(file)
+                .Bind(metadataContainer => FormattedUnicodeJson.Create(metadataContainer.Tags))
+                .Map(formattedUnicodeJson => new MediaMetadataJson(formattedUnicodeJson.Value))
+                .MapError(error => $"Error on trying to get MPEG-4 metadata: {error}"),
 
             _ => Result.Failure<MediaMetadataJson>("Unsupported file type."),
         };

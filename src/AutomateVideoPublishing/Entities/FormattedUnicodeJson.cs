@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using CSharpFunctionalExtensions;
 
 namespace AutomateVideoPublishing.Entities;
@@ -16,6 +17,7 @@ public class FormattedUnicodeJson
             var options = new JsonSerializerOptions
             {
                 WriteIndented = true,
+                NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals,
                 Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
             };
             var json = JsonSerializer.Serialize(objectToSerialize, options);
