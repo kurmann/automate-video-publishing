@@ -16,21 +16,17 @@ public class QuickTimeMetadataContainer
     public IReadOnlyDictionary<string, string?> RawMetadata { get; }
 
     // Privater Konstruktor, der nur innerhalb dieser Klasse aufgerufen werden kann.
-    private QuickTimeMetadataContainer(IReadOnlyDictionary<string, string?> rawMetadata)
+    private QuickTimeMetadataContainer(IReadOnlyDictionary<string, string?> rawMetadata) => RawMetadata = rawMetadata;
+
+    private static Result<IReadOnlyDictionary<string, string?>> TryGetQuickTimeMetadata(MediaFileInfoContainer fileContainer)
     {
-        RawMetadata = rawMetadata;
-    }
+        var directories = ImageMetadataReader.ReadMetadata(fileContainer.File.FullName);
 
-    private static Result<IReadOnlyDictionary<string, string?>> TryGetQuickTimeMetadata(FileInfoContainer fileInfoContainer)
-    {
-        var directories = ImageMetadataReader.ReadMetadata(fileInfoContainer.File.FullName);
+        var metadata = directories.OfType<QuickTimeMetadataHeaderDirectory>().FirstOrDefault();
 
-        var quickTimeMetadata = directories.OfType<QuickTimeMetadataHeaderDirectory>().FirstOrDefault();
-
-        if (quickTimeMetadata != null)
+        if (metadata != null)
         {
-            var metadataDict = quickTimeMetadata.Tags
-                .ToDictionary(tag => tag.Name, tag => tag.Description);
+            var metadataDict = metadata.Tags.ToDictionary(tag => tag.Name, tag => tag.Description);
             return Result.Success((IReadOnlyDictionary<string, string?>)metadataDict);
         }
 
@@ -63,7 +59,7 @@ public class QuickTimeMetadataContainer
         return string.Empty;
     }
 
-    public static Result<QuickTimeMetadataContainer> Create(string? filePath) => FileInfoContainer.Create(filePath)
+    public static Result<QuickTimeMetadataContainer> Create(string? filePath) => MediaFileInfoContainer.Create(filePath)
             .Bind(fileInfoContainer => TryGetQuickTimeMetadata(fileInfoContainer)
             .Map(quickTimeMetadata => new QuickTimeMetadataContainer(quickTimeMetadata)));
 

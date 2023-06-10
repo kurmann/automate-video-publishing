@@ -17,6 +17,15 @@ class Program
     {
         if (opts.ReadMetadata)
         {
+            var fileInfoContainerResult = MediaFileInfoContainer.Create(opts.File);
+
+            // quicktime and mp4 have different tools to read metadata from
+            if (fileInfoContainerResult.IsFailure)
+            {
+                Console.WriteLine($"Error on reading file: {opts.File}");
+                return;
+            }
+
             var formattedUnicodeJsonResult = QuickTimeMetadataContainer.Create(opts.File)
                 .Bind(quickTimeMetadataContainer => FormattedUnicodeJson.Create(quickTimeMetadataContainer.RawMetadata)
                 .Tap(formattedUnicodeJson => Console.WriteLine(formattedUnicodeJson)))
