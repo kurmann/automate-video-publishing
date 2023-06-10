@@ -21,27 +21,22 @@ public class MediaMetadataJson
     public static Result<MediaMetadataJson> Create(string? file)
     {
         var fileInfoContainerResult = MediaFileInfoContainer.Create(file);
-
         if (fileInfoContainerResult.IsFailure)
         {
             return Result.Failure<MediaMetadataJson>($"Error on reading file: {file}");
         }
 
-        // quicktime and mp4 have different tools to read metadata from
-        switch (fileInfoContainerResult.Value.MediaType)
+        return fileInfoContainerResult.Value.MediaType switch
         {
-            case MediaType.QuickTimeMov:
-                return QuickTimeMetadataContainer.Create(fileInfoContainerResult.Value)
+            MediaType.QuickTimeMov => QuickTimeMetadataContainer.Create(fileInfoContainerResult.Value)
                     .Bind(quickTimeMetadataContainer => FormattedUnicodeJson.Create(quickTimeMetadataContainer.RawMetadata))
                     .Map(formattedUnicodeJson => new MediaMetadataJson(formattedUnicodeJson.Value))
-                    .MapError(error => $"Error on trying to get QuickTime metadata: {error}");
-            case MediaType.Mpeg4:
-                // Hier sollte die Logik zum Lesen von MP4-Metadaten eingefügt werden. 
-                // Zum Zwecke dieses Beispiels wird ein vorübergehender Fehler zurückgegeben.
-                return Result.Failure<MediaMetadataJson>("MP4 metadata reading not yet implemented.");
-            default:
-                return Result.Failure<MediaMetadataJson>("Unsupported file type.");
-        }
+                    .MapError(error => $"Error on trying to get QuickTime metadata: {error}"),
+
+            MediaType.Mpeg4 => Result.Failure<MediaMetadataJson>("MP4 metadata reading not yet implemented."),
+
+            _ => Result.Failure<MediaMetadataJson>("Unsupported file type."),
+        };
     }
 
 }
