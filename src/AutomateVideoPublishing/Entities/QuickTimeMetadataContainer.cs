@@ -60,7 +60,9 @@ public class QuickTimeMetadataContainer
     }
 
     public static Result<QuickTimeMetadataContainer> Create(string? filePath) => MediaFileInfoContainer.Create(filePath)
-            .Bind(fileInfoContainer => TryGetQuickTimeMetadata(fileInfoContainer)
-            .Map(quickTimeMetadata => new QuickTimeMetadataContainer(quickTimeMetadata)));
+        .Bind(fileInfoContainer => TryGetQuickTimeMetadata(fileInfoContainer)
+        .Map(metadata => new QuickTimeMetadataContainer(metadata)));
 
+    public static Result<QuickTimeMetadataContainer> Create(MediaFileInfoContainer mediaFileInfoContainer) => TryGetQuickTimeMetadata(mediaFileInfoContainer)
+        .Map(metadata => new QuickTimeMetadataContainer(metadata));
 }
