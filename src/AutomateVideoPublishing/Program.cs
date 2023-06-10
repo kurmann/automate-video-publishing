@@ -26,10 +26,21 @@ class Program
                 return;
             }
 
-            var formattedUnicodeJsonResult = QuickTimeMetadataContainer.Create(opts.File)
-                .Bind(quickTimeMetadataContainer => FormattedUnicodeJson.Create(quickTimeMetadataContainer.RawMetadata)
-                .Tap(formattedUnicodeJson => Console.WriteLine(formattedUnicodeJson)))
-                .TapError(error => Console.WriteLine($"Error on trying to get QuickTime metadata: {error}"));
+            switch (fileInfoContainerResult.Value.MediaType)
+            {
+                case MediaType.QuickTimeMov:
+                    QuickTimeMetadataContainer.Create(fileInfoContainerResult.Value)
+                        .Bind(quickTimeMetadataContainer => FormattedUnicodeJson.Create(quickTimeMetadataContainer.RawMetadata)
+                        .Tap(formattedUnicodeJson => Console.WriteLine(formattedUnicodeJson)))
+                        .TapError(error => Console.WriteLine($"Error on trying to get QuickTime metadata: {error}"));
+                    break;
+                case MediaType.Mpeg4:
+                    Console.WriteLine("Here would the mp4 metadata be read.");
+                    break;
+                default:
+                    Console.WriteLine("Cannot unsupported file");
+                    break;
+            }
         }
     }
 
