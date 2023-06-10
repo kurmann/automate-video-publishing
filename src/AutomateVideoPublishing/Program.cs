@@ -1,7 +1,6 @@
 ﻿using AutomateVideoPublishing.Entities;
 using AutomateVideoPublishing.Models;
 using CommandLine;
-using CSharpFunctionalExtensions;
 
 namespace AutomateVideoPublishing;
 
