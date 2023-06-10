@@ -7,7 +7,16 @@ namespace AutomateVideoPublishing.Entities;
 /// </summary>
 public enum MediaType
 {
+    /// <summary>
+    /// Represents a QuickTime Movie (.mov) file, a common multimedia format used by Apple's QuickTime Player.
+    /// </summary>
     QuickTimeMov,
+
+    /// <summary>
+    /// Represents a MPEG-4 (.mp4 or .m4v) file. 
+    /// This media type includes the .mp4 file format, commonly used for video files,
+    /// and the .m4v file format, used by Apple's iTunes Store for DRM-protected video content.
+    /// </summary>
     Mpeg4
 }
 
