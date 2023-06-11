@@ -33,32 +33,6 @@ public class QuickTimeMetadataContainer
         return Result.Failure<IReadOnlyDictionary<string, string?>>("QuickTime metadata not found");
     }
 
-    /// <summary>
-    /// Gibt den Namen aus den Metadaten zurück, falls vorhanden, sonst einen leeren String.
-    /// </summary>
-    public string GetNameOrEmpty()
-    {
-        if (RawMetadata.TryGetValue("Name", out var name))
-        {
-            return name ?? string.Empty;
-        }
-
-        return string.Empty;
-    }
-
-    /// <summary>
-    /// Gibt die Beschreibung aus den Metadaten zurück, falls vorhanden, sonst einen leeren String.
-    /// </summary>
-    public string GetDescriptionOrEmpty()
-    {
-        if (RawMetadata.TryGetValue("Description", out var description))
-        {
-            return description ?? string.Empty;
-        }
-
-        return string.Empty;
-    }
-
     public static Result<QuickTimeMetadataContainer> Create(string? filePath) => MediaFileInfoContainer.Create(filePath)
         .Bind(fileInfoContainer => TryGetQuickTimeMetadata(fileInfoContainer)
         .Map(metadata => new QuickTimeMetadataContainer(metadata)));
