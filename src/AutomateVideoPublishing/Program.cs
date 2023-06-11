@@ -1,7 +1,5 @@
 ﻿using AutomateVideoPublishing.Entities;
-using AutomateVideoPublishing.Models;
 using CommandLine;
-using System.Collections.Generic;
 
 namespace AutomateVideoPublishing;
 
@@ -39,7 +37,14 @@ class Program
 
     public static void RunTransmitMetadataCommand(string sourceFile, string targetFile)
     {
-        // Implement your logic here
+        var tfile = TagLib.File.Create(targetFile);
+        string title = tfile.Tag.Description;
+        TimeSpan duration = tfile.Properties.Duration;
+        Console.WriteLine("Description: {0}, duration: {1}", title, duration);
+
+        // change title in the file
+        tfile.Tag.Description = "my new description";
+        tfile.Save();
     }
 }
 
