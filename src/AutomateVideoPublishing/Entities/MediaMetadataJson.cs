@@ -30,7 +30,7 @@ public class MediaMetadataJson
                 .Map(formattedUnicodeJson => new MediaMetadataJson(formattedUnicodeJson.Value))
                 .MapError(error => $"Error on trying to get QuickTime metadata: {error}"),
 
-            MediaType.Mpeg4 => ReadOnlyMediaMetadataContainer.Create(file)
+            MediaType.Mpeg4 => Mpeg4MetadataContainer.Create(file)
                 .Bind(metadataContainer => FormattedUnicodeJson.Create(metadataContainer))
                 .Map(formattedUnicodeJson => new MediaMetadataJson(formattedUnicodeJson.Value))
                 .MapError(error => $"Error on trying to get MPEG-4 metadata: {error}"),
