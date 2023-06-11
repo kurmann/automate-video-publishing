@@ -1,3 +1,4 @@
+using CSharpFunctionalExtensions;
 /// <summary>
 /// Ableitung von FileInfo mit eine Auswahl für diese Anwendung relevanten Eigenschaften.
 /// Die Klasse ist im Gegensatz FileInfo serialisierbar.
