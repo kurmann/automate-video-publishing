@@ -37,8 +37,8 @@ public class MediaFileInfoContainer
     /// </summary>
     public MediaType MediaType { get; private set; }
 
-    // Privater Konstruktor, der nur innerhalb dieser Klasse aufgerufen werden kann.
-    private MediaFileInfoContainer(FileInfo file, MediaType mediaType)
+    // Protected Konstruktor, der nur innerhalb dieser Klasse aufgerufen werden kann.
+    protected MediaFileInfoContainer(FileInfo file, MediaType mediaType)
     {
         File = file;
         MediaType = mediaType;
