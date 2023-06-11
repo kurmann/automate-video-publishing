@@ -4,23 +4,22 @@ using CSharpFunctionalExtensions;
 
 namespace AutomateVideoPublishing.Entities;
 
-/// <summary>
-/// Verwaltet die Metadaten einer QuickTime-Datei.
-/// Die Metadaten werden beim Erzeugen der Instanz gelesen und gespeichert.
-/// </summary>
-public class QuickTimeMetadataContainer
+public class QuickTimeMediaFileContainer : MediaFileInfoContainer
 {
     /// <summary>
     /// Enthält die Rohmetadaten, die aus der Datei gelesen wurden.
     /// </summary>
-    public IReadOnlyDictionary<string, string?> RawMetadata { get; }
+    public IReadOnlyDictionary<string, string?> RawMetadata { get; private set; }
 
-    // Privater Konstruktor, der nur innerhalb dieser Klasse aufgerufen werden kann.
-    private QuickTimeMetadataContainer(IReadOnlyDictionary<string, string?> rawMetadata) => RawMetadata = rawMetadata;
-
-    private static Result<IReadOnlyDictionary<string, string?>> TryGetQuickTimeMetadata(MediaFileInfoContainer fileContainer)
+    private QuickTimeMediaFileContainer(FileInfo file, MediaType mediaType, IReadOnlyDictionary<string, string?> rawMetadata)
+        : base(file, mediaType)
     {
-        var directories = ImageMetadataReader.ReadMetadata(fileContainer.File.FullName);
+        RawMetadata = rawMetadata;
+    }
+
+    private static Result<IReadOnlyDictionary<string, string?>> TryGetQuickTimeMetadata(FileInfo file)
+    {
+        var directories = ImageMetadataReader.ReadMetadata(file.FullName);
 
         var metadata = directories.OfType<QuickTimeMetadataHeaderDirectory>().FirstOrDefault();
 
@@ -33,10 +32,25 @@ public class QuickTimeMetadataContainer
         return Result.Failure<IReadOnlyDictionary<string, string?>>("QuickTime metadata not found");
     }
 
-    public static Result<QuickTimeMetadataContainer> Create(string? filePath) => MediaFileInfoContainer.Create(filePath)
-        .Bind(fileInfoContainer => TryGetQuickTimeMetadata(fileInfoContainer)
-        .Map(metadata => new QuickTimeMetadataContainer(metadata)));
+    public static new Result<QuickTimeMediaFileContainer> Create(string? filePath)
+    {
+        var result = MediaFileInfoContainer.Create(filePath);
+        if (result.IsFailure)
+        {
+            return Result.Failure<QuickTimeMediaFileContainer>(result.Error);
+        }
 
-    public static Result<QuickTimeMetadataContainer> Create(MediaFileInfoContainer mediaFileInfoContainer) => TryGetQuickTimeMetadata(mediaFileInfoContainer)
-        .Map(metadata => new QuickTimeMetadataContainer(metadata));
+        if (result.Value.MediaType != MediaType.QuickTimeMov)
+        {
+            return Result.Failure<QuickTimeMediaFileContainer>($"File {filePath} is not a QuickTime .mov file.");
+        }
+
+        var metadataResult = TryGetQuickTimeMetadata(result.Value.File);
+        if (metadataResult.IsFailure)
+        {
+            return Result.Failure<QuickTimeMediaFileContainer>(metadataResult.Error);
+        }
+
+        return Result.Success(new QuickTimeMediaFileContainer(result.Value.File, result.Value.MediaType, metadataResult.Value));
+    }
 }
