@@ -25,7 +25,7 @@ public class MediaMetadataJson
 
         return fileInfoContainerResult.Value.MediaType switch
         {
-            MediaType.QuickTimeMov => QuickTimeMetadataContainer.Create(fileInfoContainerResult.Value)
+            MediaType.QuickTimeMov => QuickTimeMediaFileContainer.Create(fileInfoContainerResult.Value.File.FullName)
                 .Bind(metadataContainer => FormattedUnicodeJson.Create(metadataContainer.RawMetadata))
                 .Map(formattedUnicodeJson => new MediaMetadataJson(formattedUnicodeJson.Value))
                 .MapError(error => $"Error on trying to get QuickTime metadata: {error}"),
