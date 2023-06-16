@@ -5,6 +5,8 @@ using CSharpFunctionalExtensions;
 
 class Program
 {
+    private const string DefaultStrategyName = "TransmitMetadata";
+
     static void Main(string[] args)
     {
         var strategyMap = new Dictionary<string, IWorkflowStrategy>
@@ -18,7 +20,7 @@ class Program
             {
                 opts.ValidateInputParameters()
                     .Map(() => WorkflowContext.Create(opts.SourceFile, opts.TargetFile)
-                    .Map((context) => ExecuteStrategy(context, opts.Strategy ?? "TransmitMetadata", strategyMap))
+                    .Map((context) => ExecuteStrategy(context, opts.Strategy ?? DefaultStrategyName, strategyMap))
                     .Tap(result => Console.WriteLine(result.IsSuccess ? "Workflow completed" : result.Error)));
             });
     }
