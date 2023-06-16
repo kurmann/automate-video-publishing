@@ -1,24 +1,42 @@
-# MP4 Veröffentlichungs-Automation
+# Automatisieren von Videoschnitt-Veröffentlichungen
 
-## Überblick
-Dieses Python-Projekt zielt darauf ab, den Prozess der Veröffentlichung von MP4-Dateien zu automatisieren, insbesondere indem es die Metadaten aus den ursprünglichen MOV-Masterdateien aus Final Cut Pro in die komprimierten MP4-Dateien überträgt. Es kann hilfreich sein für Anwendungsfälle, die eine MP4-Veröffentlichung erfordern.
+Dieses Projekt ist eine Konsolenanwendung, die auf .NET 7.0 basiert und in C# geschrieben ist. Es dient dazu, den Prozess der Videoschnitt-Veröffentlichung zu automatisieren.
 
-## Features
-- Auslesen der Metadaten aus der Originaldatei
-- Kopieren der Beschreibung und des Datums aus der Metadaten in die MP4-Datei
-- Verschieben der MP4-Datei in ein Zielverzeichnis basierend auf den Metadaten
+## Zweck
 
-## Voraussetzungen
-- Python (3.6 oder höher)
-- AtomicParsley
+Der Hauptzweck dieser Anwendung besteht darin, den Prozess der Videoschnitt-Veröffentlichung zu automatisieren. Dies wird durch die Implementierung eines Workflows erreicht, der eine Reihe von Schritten in einer bestimmten Reihenfolge ausführt.
 
-## Installation
-1. Klonen Sie das Repository: `git clone https://github.com/kurmann/automate-video-publishing`
-2. Wechseln Sie in das Verzeichnis des geklonten Repositorys: `cd mp4-publishing-automation`
-3. Installieren Sie die erforderlichen Python-Pakete: `pip install -r requirements.txt`
+## Aufbau
 
-## Verwendung
-Führen Sie das Hauptskript `publishing_to_infuse.py` mit dem Pfad zur zu verarbeitenden MP4-Datei als Argument aus. Zum Beispiel: `python publishing_to_infuse.py /path/to/your/video.mp4`
+Die Anwendung kann mit Parametern aufgerufen werden:
+
+- `Workflow`: Bestimmt den Automatisierungsablauf, also welche Schritte in welcher Reihenfolge ausgeführt werden.
+- `Kontext`: Enthält alle für die Ausführung der Automatisierung notwendigen Daten, z. B. Quelldateien und Zielinformationen für die Metadatenübertragung, AWS-Anmeldedaten usw. Der Kontext kann entweder durch Benutzerspezifische Umgebungsvariablen oder durch eine Konfigurationsdatei (im JSON-Format) definiert werden.
+
+## Leistungsumfang
+
+In der aktuellen Phase implementiert die Anwendung eine Strategie, genannt `MetadataTransferAndArchivingFromMasterfile`, die im Wesentlichen folgendes tut:
+
+- Übertragung der Metadaten von der Apple ProRes Masterdatei in die komprimierte M4V-Datei und Erstellung des M4V-Jahrestags anhand des Iso-Dateinamens der Quelldatei.
+- Verschieben der M4V-Datei (die veröffentlichte Datei) in das im Kontext definierte Zielverzeichnis und einsortieren in Unterordner anhand der M4V-Metadaten Albumname und Staffelnummer.
+- Archivierung der Masterdatei in AWS und lokale Datei löschen nach Überprüfung durch Checksummen.
+- Nach abgeschlossener Übertragung in AWS, den Projektordner des Final Cut Videoschnitts (also die Medienbibliothek) als ZIP zu komprimieren und dann auch in AWS zu übertragen. Das ZIP müsste nach erfolgreicher Übertragung gelöscht werden, einschließlich des Final Cut Projektordners.
+- Und bevor dies alles geschieht, müssten die Originalmedien aus dem Final Cut Pro-Projektordners in ein spezielles Verzeichnis "Filmaufnahmen" kopiert werden und anhand der Metadaten in Unterverzeichnisse verpackt werden (also für jeden Tag des Aufnahmezeitpunkts) in Unterordner mit dem Namen des ISO-Datums (YYYY-MM-TT).
+- Weitere mögliche Ausbaustufen in Zukunft. Die oben genannte Workflow-Funktionalität soll in Version 1.0 bereitstehen.
+
+## Fortschritt
+
+Der Fortschritt des Projekts kann anhand der folgenden Issues verfolgt werden:
+
+1. [Erstellung des Grundgerüsts der Anwendung](https://github.com/kurmann/automate-video-publishing/issues/11)
+2. [Implementierung der Kontextverwaltung](https://github.com/kurmann/automate-video-publishing/issues/12)
+3. [Implementierung der Metadatenübertragung](https://github.com/kurmann/automate-video-publishing/issues/13)
+4. [Implementierung des Dateiverschiebens](https://github.com/kurmann/automate-video-publishing/issues/14)
+5. [Archivierung der Masterdatei in der Cloud](https://github.com/kurmann/automate-video-publishing/issues/15)
+6. [Archivierung des Final Cut Projekt-Ordners in der Cloud](https://github.com/kurmann/automate-video-publishing/issues/16)
+7. [Implementierung des Kopierens und Verpackens der Originalmedien](https://github.com/kurmann/automate-video-publishing/issues/17)
+
+Bitte beachten Sie, dass die Reihenfolge der Issues der vorgeschlagenen Reihenfolge der Implementierung entspricht.
 
 ## Lizenz
 Dieses Projekt ist lizenziert unter der MIT-Lizenz. Siehe [LICENSE](LICENSE.txt) für weitere Informationen.
