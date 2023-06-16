@@ -1,9 +1,30 @@
-namespace AutomateVideoPublishing.Strategies;
+using CSharpFunctionalExtensions;
 
 public class WorkflowContext
 {
-    public string? SourceFile { get; set; }
-    public string? TargetFile { get; set; }
+    public DirectoryInfo QuickTimeMasterDirectory { get; }
+    public DirectoryInfo PublishedMpeg4Directory { get; }
 
-    // Hier können Sie weitere Kontextdaten hinzufügen, die für Ihre Anwendung benötigt werden.
+    private WorkflowContext(DirectoryInfo quickTimeMasterDirectory, DirectoryInfo publishedMpeg4Directory)
+    {
+        QuickTimeMasterDirectory = quickTimeMasterDirectory;
+        PublishedMpeg4Directory = publishedMpeg4Directory;
+    }
+
+    public static Result<WorkflowContext, string> Create(string quickTimeMasterDirectoryPath, string publishedMpeg4DirectoryPath)
+    {
+        var quickTimeMasterDirectory = new DirectoryInfo(quickTimeMasterDirectoryPath);
+        if (!quickTimeMasterDirectory.Exists)
+        {
+            return Result.Failure<WorkflowContext, string>("QuickTime master directory does not exist.");
+        }
+
+        var publishedMpeg4Directory = new DirectoryInfo(publishedMpeg4DirectoryPath);
+        if (!publishedMpeg4Directory.Exists)
+        {
+            return Result.Failure<WorkflowContext, string>("Published MPEG-4 directory does not exist.");
+        }
+
+        return Result.Success<WorkflowContext, string>(new WorkflowContext(quickTimeMasterDirectory, publishedMpeg4Directory));
+    }
 }
