@@ -9,28 +9,32 @@ class Program
 
     static void Main(string[] args)
     {
-        var strategyMap = new Dictionary<string, IWorkflowStrategy>
-        {
-            { "TransmitMetadata", new TransmitMetadataStrategy() }
-            // Weitere Strategien können hier hinzugefügt werden.
-        };
+        var strategyFactory = new StrategyFactory();
 
         Parser.Default.ParseArguments<Options>(args)
             .WithParsed<Options>(opts =>
             {
-                opts.ValidateInputParameters()
-                    .Map(() => WorkflowContext.Create(opts.SourceFile, opts.TargetFile)
-                    .Map((context) => ExecuteStrategy(context, opts.Strategy ?? DefaultStrategyName, strategyMap))
-                    .Tap(result => Console.WriteLine(result.IsSuccess ? "Workflow completed" : result.Error)));
+                var contextResult = WorkflowContext.Create(opts.SourceFile, opts.TargetFile);
+                if (contextResult.IsFailure)
+                {
+                    Console.WriteLine($"Error setting up workflow context: {contextResult.Error}");
+                    return;
+                }
+
+                var strategyResult = strategyFactory.GetStrategy(opts.Strategy);
+                if (strategyResult.IsFailure)
+                {
+                    Console.WriteLine(strategyResult.Error);
+                    return;
+                }
+
+                strategyResult.Value.Execute(contextResult.Value);
             });
     }
 
-    private static Result ExecuteStrategy(WorkflowContext context, string strategyName, Dictionary<string, IWorkflowStrategy> strategyMap)
-    {
-        return strategyMap.ContainsKey(strategyName)
+    private static Result ExecuteStrategy(WorkflowContext context, string strategyName, Dictionary<string, IWorkflowStrategy> strategyMap) => strategyMap.ContainsKey(strategyName)
             ? Result.Success(strategyMap[strategyName].Execute(context))
             : Result.Failure($"Unknown strategy: {strategyName}");
-    }
 }
 
 public class Options
@@ -59,3 +63,33 @@ public class Options
         return Result.Success();
     }
 }
+
+public class StrategyFactory
+{
+    private readonly Dictionary<string, IWorkflowStrategy> _strategyMap;
+
+    public StrategyFactory()
+    {
+        _strategyMap = new Dictionary<string, IWorkflowStrategy>
+        {
+            { "TransmitMetadata", new TransmitMetadataStrategy() }
+            // Hier können Sie weitere Strategien hinzufügen.
+        };
+    }
+
+    public Result<IWorkflowStrategy, string> GetStrategy(string? strategyName)
+    {
+        if (string.IsNullOrWhiteSpace(strategyName))
+        {
+            return Result.Success<IWorkflowStrategy, string>(_strategyMap["TransmitMetadata"]); // Default-Strategie
+        }
+
+        if (_strategyMap.TryGetValue(strategyName, out var strategy))
+        {
+            return Result.Success<IWorkflowStrategy, string>(strategy);
+        }
+
+        return Result.Failure<IWorkflowStrategy, string>($"Unknown strategy: {strategyName}");
+    }
+}
+
