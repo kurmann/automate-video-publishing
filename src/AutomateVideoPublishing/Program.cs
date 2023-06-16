@@ -1,56 +1,52 @@
 ﻿using AutomateVideoPublishing.Entities;
+using AutomateVideoPublishing.Strategies;
 using CommandLine;
 
-namespace AutomateVideoPublishing
+class Program
 {
-    class Program
+    static void Main(string[] args)
     {
-        static void Main(string[] args)
+        var strategyMap = new Dictionary<string, IWorkflowStrategy>
         {
-            Parser.Default.ParseArguments<ReadOptions, TransmitOptions>(args)
-                .WithParsed<ReadOptions>(opts => RunReadMetadataCommand(opts.File))
-                .WithParsed<TransmitOptions>(opts => RunTransmitMetadataCommand(opts.SourceFile, opts.TargetFile));
-        }
+            { "TransmitMetadata", new TransmitMetadataStrategy() }
+            // Hier können Sie weitere Strategien hinzufügen.
+        };
 
-        public static void RunReadMetadataCommand(string? file)
-        {
-            var jsonResult = MediaMetadataJson.Create(file);
-            if (jsonResult.IsFailure)
+        Parser.Default.ParseArguments<Options>(args)
+            .WithParsed<Options>(opts =>
             {
-                Console.WriteLine($"Error reading metadata: {jsonResult.Error}");
-                return;
-            }
+                var contextResult = WorkflowContext.Create(opts.SourceFile, opts.TargetFile);
+                if (contextResult.IsFailure)
+                {
+                    Console.WriteLine($"Error setting up workflow context: {contextResult.Error}");
+                    return;
+                }
 
-            Console.WriteLine(jsonResult.Value.Json);
-        }
-
-        public static void RunTransmitMetadataCommand(string? sourceFile, string? targetFile)
-        {
-            var tfile = TagLib.File.Create(targetFile);
-            string title = tfile.Tag.Description;
-            TimeSpan duration = tfile.Properties.Duration;
-            Console.WriteLine("Description: {0}, duration: {1}", title, duration);
-
-            // change title in the file
-            tfile.Tag.Description = "my new description";
-            tfile.Save();
-        }
+                if (string.IsNullOrWhiteSpace(opts.Strategy))
+                {
+                    Console.WriteLine("Strategy parameter cannot be empty.");
+                    return;
+                }
+                if (strategyMap.TryGetValue(opts.Strategy, out var strategy))
+                {
+                    strategy.Execute(contextResult.Value);
+                }
+                else
+                {
+                    Console.WriteLine("Unknown strategy: {0}", opts.Strategy);
+                }
+            });
     }
+}
 
-    [Verb("read", HelpText = "Read metadata from file.")]
-    public class ReadOptions
-    {
-        [Option('f', "file", Required = true, HelpText = "File to process.")]
-        public string? File { get; set; }
-    }
+public class Options
+{
+    [Option('s', "source", Required = true, HelpText = "Source file.")]
+    public string? SourceFile { get; set; }
 
-    [Verb("transmit", HelpText = "Transmit metadata between files.")]
-    public class TransmitOptions
-    {
-        [Option('s', "source", Required = true, HelpText = "Source file.")]
-        public string? SourceFile { get; set; }
+    [Option('t', "target", Required = true, HelpText = "Target file.")]
+    public string? TargetFile { get; set; }
 
-        [Option('t', "target", Required = true, HelpText = "Target file.")]
-        public string? TargetFile { get; set; }
-    }
+    [Option('y', "strategy", Required = true, HelpText = "Strategy to execute.")]
+    public string? Strategy { get; set; }
 }
