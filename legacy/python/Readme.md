@@ -43,3 +43,31 @@ Die `MetadataWriter` Klasse erbt auch von der `MetadataManager` Klasse und schre
 ## Datei: main.py
 
 Dieses Skript ist der Hauptausführungspunkt für die Automatisierung des Videoschnittprozesses. Es erstellt Instanzen der oben genannten Klassen, liest Metadaten aus einer MP4-Datei, ändert sie, verschiebt die Datei anhand der Metadaten und sendet schließlich eine Benachrichtigung über den Erfolg der Operation.
+
+# Benötigte Python-Pakete und Installationsanleitung
+
+Um die Skripte korrekt auszuführen, benötigen Sie bestimmte Python-Pakete. Die genauen Pakete können je nach Skript variieren, aber basierend auf den Klassennamen und Funktionen, die ich in den Skripten gesehen habe, sind hier die wahrscheinlich erforderlichen Pakete:
+
+## Python-Pakete
+
+1.  `pync`: Dieses Paket wird verwendet, um Benachrichtigungen auf MacOS zu senden. Es kann mit dem Befehl `pip install pync` installiert werden.
+
+2.  `keyring`: Dieses Paket wird verwendet, um mit dem MacOS Keychain zu interagieren. Es kann mit dem Befehl `pip install keyring` installiert werden.
+
+3.  `subprocess`: Dieses Paket ist Teil der Standardbibliothek von Python und wird verwendet, um Shell-Befehle auszuführen. Es sollte bereits in Ihrer Python-Installation vorhanden sein und benötigt keine gesonderte Installation.
+
+Bitte beachten Sie, dass es weitere Abhängigkeiten geben könnte, die aufgrund der Art und Weise, wie die Skripte geschrieben wurden, nicht direkt erkennbar sind.
+
+## Installationsanleitung
+
+Folgen Sie diesen Schritten, um die Skripte zu installieren und auszuführen:
+
+1.  **Python installieren**: Stellen Sie sicher, dass Sie Python auf Ihrem System installiert haben. Sie können Python von der offiziellen Webseite <https://www.python.org/downloads/> herunterladen und installieren.
+
+2.  **Paket-Manager pip installieren**: pip ist ein Paket-Manager für Python und wird zum Installieren von Paketen verwendet. Wenn Sie Python von der offiziellen Webseite installieren, sollte pip bereits installiert sein. Falls nicht, können Sie pip von <https://pip.pypa.io/en/stable/installing/> herunterladen und installieren.
+
+3.  **Python-Pakete installieren**: Nachdem Sie Python und pip installiert haben, können Sie die erforderlichen Python-Pakete mit dem Befehl `pip install <paketname>` installieren. Ersetzen Sie `<paketname>` durch den Namen des zu installierenden Pakets, z.B. `pync` oder `keyring`.
+
+4.  **Skripte klonen oder herunterladen**: Klonen Sie das Repository, das die Skripte enthält, oder laden Sie die Skripte direkt auf Ihren Computer herunter.
+
+5.  **Skripte ausführen**: Navigieren Sie im Terminal zu dem Ordner, der die Skripte enthält, und führen Sie die Skripte mit dem Befehl `python <skriptname>.py` aus. Ersetzen Sie `<skriptname>` durch den Namen des auszuführenden Skripts.
