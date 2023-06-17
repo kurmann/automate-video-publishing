@@ -1,3 +1,4 @@
+using AutomateVideoPublishing.Entities;
 using CSharpFunctionalExtensions;
 
 namespace AutomateVideoPublishing.Strategies;
