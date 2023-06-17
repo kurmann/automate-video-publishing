@@ -6,20 +6,26 @@ using CSharpFunctionalExtensions;
 class Program
 {
     private const string DefaultStrategyName = "TransmitMetadata";
+    private const string DefaultDirectory = ".";  // Current directory
 
     static void Main(string[] args)
     {
         Parser.Default.ParseArguments<Options>(args)
             .WithParsed<Options>(opts =>
             {
-                var contextResult = WorkflowContext.Create(opts.SourceFile, opts.TargetFile);
+                // use default values if not provided
+                var quickTimeMasterDirectory = string.IsNullOrWhiteSpace(opts.QuickTimeMasterDirectory) ? DefaultDirectory : opts.QuickTimeMasterDirectory;
+                var publishedMpeg4Directory = string.IsNullOrWhiteSpace(opts.PublishedMpeg4Directory) ? DefaultDirectory : opts.PublishedMpeg4Directory;
+                var strategy = string.IsNullOrWhiteSpace(opts.Workflow) ? DefaultStrategyName : opts.Workflow;
+
+                var contextResult = WorkflowContext.Create(quickTimeMasterDirectory, publishedMpeg4Directory);
                 if (contextResult.IsFailure)
                 {
                     Console.WriteLine($"Error setting up workflow context: {contextResult.Error}");
                     return;
                 }
 
-                var strategyMapperResult =  WorkflowStrategyMapper.Create(opts.Strategy);
+                var strategyMapperResult =  WorkflowStrategyMapper.Create(strategy);
                 if (strategyMapperResult.IsFailure)
                 {
                     Console.WriteLine(strategyMapperResult.Error);
@@ -29,36 +35,16 @@ class Program
                 strategyMapperResult.Value.SelectedStrategy.Execute(contextResult.Value);
             });
     }
-
-    private static Result ExecuteStrategy(WorkflowContext context, string strategyName, Dictionary<string, IWorkflowStrategy> strategyMap) => strategyMap.ContainsKey(strategyName)
-            ? Result.Success(strategyMap[strategyName].Execute(context))
-            : Result.Failure($"Unknown strategy: {strategyName}");
 }
 
 public class Options
 {
-    [Option('s', "source", Required = true, HelpText = "Source file.")]
-    public string? SourceFile { get; set; }
+    [Option('s', "source", Required = false, HelpText = "Source file.")]
+    public string? QuickTimeMasterDirectory { get; set; }
 
-    [Option('t', "target", Required = true, HelpText = "Target file.")]
-    public string? TargetFile { get; set; }
+    [Option('t', "target", Required = false, HelpText = "Target file.")]
+    public string? PublishedMpeg4Directory { get; set; }
 
-    [Option('y', "strategy", Required = false, HelpText = "Strategy to execute.")]
-    public string? Strategy { get; set; }
-
-    public Result ValidateInputParameters()
-    {
-        if (string.IsNullOrWhiteSpace(SourceFile))
-        {
-            return Result.Failure("Source file cannot be empty.");
-        }
-
-        if (string.IsNullOrWhiteSpace(TargetFile))
-        {
-            return Result.Failure("Target file cannot be empty.");
-        }
-
-        return Result.Success();
-    }
+    [Option('w', "workflow", Required = false, HelpText = "Strategy to execute.")]
+    public string? Workflow { get; set; }
 }
-

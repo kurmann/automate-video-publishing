@@ -11,22 +11,12 @@ public class WorkflowContext
         PublishedMpeg4Directory = publishedMpeg4Directory;
     }
 
-    public static Result<WorkflowContext, string> Create(string? quickTimeMasterDirectoryPath, string? publishedMpeg4DirectoryPath)
+    public static Result<WorkflowContext, string> Create(string quickTimeMasterDirectoryPath, string publishedMpeg4DirectoryPath)
     {
-        if (string.IsNullOrEmpty(quickTimeMasterDirectoryPath))
-        {
-            return Result.Failure<WorkflowContext, string>("QuickTime master directory path is empty or null.");
-        }
-
         var quickTimeMasterDirectory = new DirectoryInfo(quickTimeMasterDirectoryPath);
         if (!quickTimeMasterDirectory.Exists)
         {
             return Result.Failure<WorkflowContext, string>("QuickTime master directory does not exist.");
-        }
-
-        if (string.IsNullOrEmpty(publishedMpeg4DirectoryPath))
-        {
-            return Result.Failure<WorkflowContext, string>("Published MPEG-4 directory path is empty or null.");
         }
 
         var publishedMpeg4Directory = new DirectoryInfo(publishedMpeg4DirectoryPath);
