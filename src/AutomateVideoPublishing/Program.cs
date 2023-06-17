@@ -9,8 +9,6 @@ class Program
 
     static void Main(string[] args)
     {
-        var strategyFactory = new StrategyFactory();
-
         Parser.Default.ParseArguments<Options>(args)
             .WithParsed<Options>(opts =>
             {
@@ -21,14 +19,14 @@ class Program
                     return;
                 }
 
-                var strategyResult = strategyFactory.GetStrategy(opts.Strategy);
-                if (strategyResult.IsFailure)
+                var strategyMapperResult =  WorkflowStrategyMapper.Create(opts.Strategy);
+                if (strategyMapperResult.IsFailure)
                 {
-                    Console.WriteLine(strategyResult.Error);
+                    Console.WriteLine(strategyMapperResult.Error);
                     return;
                 }
 
-                strategyResult.Value.Execute(contextResult.Value);
+                strategyMapperResult.Value.SelectedStrategy.Execute(contextResult.Value);
             });
     }
 
@@ -64,32 +62,50 @@ public class Options
     }
 }
 
-public class StrategyFactory
+/// <summary>
+/// Die Klasse 'WorkflowStrategyMapper' ermöglicht das Erstellen von IWorkflowStrategy-Objekten basierend auf dem Namen einer Strategie.
+/// </summary>
+public class WorkflowStrategyMapper
 {
-    private readonly Dictionary<string, IWorkflowStrategy> _strategyMap;
-
-    public StrategyFactory()
+    // Map der unterstützten Strategien. 
+    // Der Schlüssel ist der Name der Strategie und der Wert ist das zugehörige IWorkflowStrategy-Objekt.
+    private static readonly Dictionary<string, IWorkflowStrategy> StrategyMap = new()
     {
-        _strategyMap = new Dictionary<string, IWorkflowStrategy>
-        {
-            { "TransmitMetadata", new TransmitMetadataStrategy() }
-            // Hier können Sie weitere Strategien hinzufügen.
-        };
+        { nameof(TransmitMetadataStrategy), new TransmitMetadataStrategy() }
+        // Hier können weitere Strategien hinzugefügt werden.
+    };
+
+    // Die Standardstrategie, die verwendet wird, wenn keine spezifische Strategie angegeben wird.
+    private const string DefaultStrategy = nameof(TransmitMetadataStrategy);
+
+    // Die aktuell gewählte Strategie.
+    public IWorkflowStrategy SelectedStrategy { get; private set; }
+
+    private WorkflowStrategyMapper(IWorkflowStrategy strategy)
+    {
+        SelectedStrategy = strategy;
     }
 
-    public Result<IWorkflowStrategy, string> GetStrategy(string? strategyName)
+    /// <summary>
+    /// Erstellt ein neues 'WorkflowStrategyMapper'-Objekt basierend auf dem gegebenen Strategienamen.
+    /// Wenn kein Strategienamen angegeben wird, wird die Standardstrategie verwendet.
+    /// </summary>
+    /// <param name="strategyName">Der Name der Strategie. Standardwert ist der Name der Standardstrategie.</param>
+    /// <returns>Ein 'Result'-Objekt, das entweder das erstellte 'WorkflowStrategyMapper'-Objekt enthält (im Erfolgsfall) oder einen Fehlerstring (im Fehlerfall).</returns>
+    public static Result<WorkflowStrategyMapper, string> Create(string? strategyName = DefaultStrategy)
     {
         if (string.IsNullOrWhiteSpace(strategyName))
         {
-            return Result.Success<IWorkflowStrategy, string>(_strategyMap["TransmitMetadata"]); // Default-Strategie
+            return Result.Failure<WorkflowStrategyMapper, string>("Strategy parameter cannot be empty or null.");
         }
-
-        if (_strategyMap.TryGetValue(strategyName, out var strategy))
+        
+        if (StrategyMap.TryGetValue(strategyName, out var strategy))
         {
-            return Result.Success<IWorkflowStrategy, string>(strategy);
+            return Result.Success<WorkflowStrategyMapper, string>(new WorkflowStrategyMapper(strategy));
         }
 
-        return Result.Failure<IWorkflowStrategy, string>($"Unknown strategy: {strategyName}");
+        return Result.Failure<WorkflowStrategyMapper, string>($"Unknown strategy: {strategyName}");
     }
 }
+
 
