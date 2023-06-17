@@ -1,5 +1,7 @@
 using CSharpFunctionalExtensions;
 
+namespace AutomateVideoPublishing.Entities;
+
 public class WorkflowContext
 {
     public DirectoryInfo QuickTimeMasterDirectory { get; }
