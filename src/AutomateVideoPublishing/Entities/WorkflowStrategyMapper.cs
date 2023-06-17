@@ -18,7 +18,7 @@ public class WorkflowStrategyMapper
     };
 
     // Die Standardstrategie, die verwendet wird, wenn keine spezifische Strategie angegeben wird.
-    private const string DefaultStrategy = nameof(TransmitMetadataStrategy);
+    public const string DefaultStrategy = nameof(TransmitMetadataStrategy);
 
     // Die aktuell gewählte Strategie.
     public IWorkflowStrategy SelectedStrategy { get; private set; }

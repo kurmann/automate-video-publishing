@@ -35,12 +35,12 @@ class Program
 
 public class Options
 {
-    [Option('s', "source", Required = false, HelpText = "Source file.")]
+    [Option('s', "source", Required = false, HelpText = "Optional. Source directory for QuickTime master videos. If not specified, the current working directory is used.")]
     public string? QuickTimeMasterDirectory { get; set; }
 
-    [Option('t', "target", Required = false, HelpText = "Target file.")]
+    [Option('t', "target", Required = false, HelpText = "Optional. Target directory for published MPEG-4 videos. If not specified, the current working directory is used.")]
     public string? PublishedMpeg4Directory { get; set; }
 
-    [Option('w', "workflow", Required = false, HelpText = "Workflow strategy to execute.")]
+    [Option('w', "workflow", Required = false, Default = WorkflowStrategyMapper.DefaultStrategy, HelpText = "Optional. Specifies the workflow strategy to execute. If not specified, the 'TransmitMetadata' strategy is used as default.")]
     public string? Workflow { get; set; }
 }
