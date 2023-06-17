@@ -19,16 +19,11 @@ class Program
                     return;
                 }
 
-                // Strategie mappen
-                var strategyMapperResult =  WorkflowStrategyMapper.Create(opts.Workflow);
-                if (strategyMapperResult.IsFailure)
-                {
-                    Console.WriteLine(strategyMapperResult.Error);
-                    return;
-                }
-
-                // Ausgewählte Strategie ausführen
-                strategyMapperResult.Value.SelectedStrategy.Execute(contextResult.Value);
+                // Strategie mappen und ausführen
+                var workflowResult = WorkflowStrategyMapper.Create(opts.Workflow)
+                    .Map(strategyMapper => strategyMapper.SelectedStrategy.Execute(contextResult.Value));
+;
+                Console.WriteLine(workflowResult.IsFailure ? workflowResult.Error : "Workflow completed");
             });
     }
 }
@@ -41,6 +36,6 @@ public class Options
     [Option('t', "target", Required = false, HelpText = "Optional. Target directory for published MPEG-4 videos. If not specified, the current working directory is used.")]
     public string? PublishedMpeg4Directory { get; set; }
 
-    [Option('w', "workflow", Required = false, Default = WorkflowStrategyMapper.DefaultStrategy, HelpText = "Optional. Specifies the workflow strategy to execute. If not specified, the 'TransmitMetadata' strategy is used as default.")]
+    [Option('w', "workflow", Required = false, Default = WorkflowStrategyMapper.DefaultStrategy, HelpText = "Specifies the workflow strategy to execute.")]
     public string? Workflow { get; set; }
 }
