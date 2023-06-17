@@ -5,33 +5,29 @@ using CSharpFunctionalExtensions;
 
 class Program
 {
-    private const string DefaultStrategyName = "TransmitMetadata";
-    private const string DefaultDirectory = ".";  // Current directory
-
     static void Main(string[] args)
     {
+        // Kommandozeilenoptionen parsen
         Parser.Default.ParseArguments<Options>(args)
             .WithParsed<Options>(opts =>
             {
-                // use default values if not provided
-                var quickTimeMasterDirectory = string.IsNullOrWhiteSpace(opts.QuickTimeMasterDirectory) ? DefaultDirectory : opts.QuickTimeMasterDirectory;
-                var publishedMpeg4Directory = string.IsNullOrWhiteSpace(opts.PublishedMpeg4Directory) ? DefaultDirectory : opts.PublishedMpeg4Directory;
-                var strategy = string.IsNullOrWhiteSpace(opts.Workflow) ? DefaultStrategyName : opts.Workflow;
-
-                var contextResult = WorkflowContext.Create(quickTimeMasterDirectory, publishedMpeg4Directory);
+                // Workflow-Kontext erstellen
+                var contextResult = WorkflowContext.Create(opts.QuickTimeMasterDirectory, opts.PublishedMpeg4Directory);
                 if (contextResult.IsFailure)
                 {
                     Console.WriteLine($"Error setting up workflow context: {contextResult.Error}");
                     return;
                 }
 
-                var strategyMapperResult =  WorkflowStrategyMapper.Create(strategy);
+                // Strategie mappen
+                var strategyMapperResult =  WorkflowStrategyMapper.Create(opts.Workflow);
                 if (strategyMapperResult.IsFailure)
                 {
                     Console.WriteLine(strategyMapperResult.Error);
                     return;
                 }
 
+                // Ausgewählte Strategie ausführen
                 strategyMapperResult.Value.SelectedStrategy.Execute(contextResult.Value);
             });
     }
@@ -45,6 +41,6 @@ public class Options
     [Option('t', "target", Required = false, HelpText = "Target file.")]
     public string? PublishedMpeg4Directory { get; set; }
 
-    [Option('w', "workflow", Required = false, HelpText = "Strategy to execute.")]
+    [Option('w', "workflow", Required = false, HelpText = "Workflow strategy to execute.")]
     public string? Workflow { get; set; }
 }
