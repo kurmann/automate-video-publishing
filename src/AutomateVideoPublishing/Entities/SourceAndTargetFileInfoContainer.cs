@@ -1,5 +1,3 @@
-using CSharpFunctionalExtensions;
-
 namespace AutomateVideoPublishing.Entities;
 
 /// <summary>

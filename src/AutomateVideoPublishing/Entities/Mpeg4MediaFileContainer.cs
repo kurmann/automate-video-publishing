@@ -1,5 +1,3 @@
-using CSharpFunctionalExtensions;
-
 namespace AutomateVideoPublishing.Entities;
 
 public class Mpeg4MediaFileContainer : MediaFileInfoContainer

@@ -1,5 +1,3 @@
-using CSharpFunctionalExtensions;
-
 public class WorkflowContext
 {
     private const string DefaultDirectory = ".";  // Aktuelles Verzeichnis

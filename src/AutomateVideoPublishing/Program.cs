@@ -1,7 +1,4 @@
-﻿using AutomateVideoPublishing.Entities;
-using AutomateVideoPublishing.Strategies;
-using CommandLine;
-using CSharpFunctionalExtensions;
+﻿using CommandLine;
 
 class Program
 {

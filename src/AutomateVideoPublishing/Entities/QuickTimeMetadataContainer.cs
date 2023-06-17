@@ -1,6 +1,5 @@
 using MetadataExtractor;
 using MetadataExtractor.Formats.QuickTime;
-using CSharpFunctionalExtensions;
 
 namespace AutomateVideoPublishing.Entities;
 
