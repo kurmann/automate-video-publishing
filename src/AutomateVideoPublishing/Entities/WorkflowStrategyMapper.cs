@@ -35,7 +35,7 @@ public class WorkflowStrategyMapper
     {
         if (string.IsNullOrWhiteSpace(strategyName))
         {
-            return Result.Failure<WorkflowStrategyMapper, string>("Strategy parameter cannot be empty or null.");
+            strategyName = DefaultStrategy;
         }
         
         if (StrategyMap.TryGetValue(strategyName, out var strategy))
