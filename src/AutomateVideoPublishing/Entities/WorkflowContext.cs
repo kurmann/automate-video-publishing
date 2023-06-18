@@ -13,23 +13,32 @@ public class WorkflowContext
 
     public static Result<WorkflowContext, string> Create(string? quickTimeMasterDirectoryPath, string? publishedMpeg4DirectoryPath)
     {
-        // Verwenden Sie Standardwerte, wenn keine bereitgestellt werden
-        quickTimeMasterDirectoryPath = string.IsNullOrWhiteSpace(quickTimeMasterDirectoryPath) ? DefaultDirectory : quickTimeMasterDirectoryPath;
-        publishedMpeg4DirectoryPath = string.IsNullOrWhiteSpace(publishedMpeg4DirectoryPath) ? DefaultDirectory : publishedMpeg4DirectoryPath;
+        // Use default values if none are provided
+        bool isQuickTimeMasterDirectoryDefault = string.IsNullOrWhiteSpace(quickTimeMasterDirectoryPath);
+        bool isPublishedMpeg4DirectoryDefault = string.IsNullOrWhiteSpace(publishedMpeg4DirectoryPath);
+        
+        quickTimeMasterDirectoryPath = isQuickTimeMasterDirectoryDefault ? DefaultDirectory : quickTimeMasterDirectoryPath;
+        publishedMpeg4DirectoryPath = isPublishedMpeg4DirectoryDefault ? DefaultDirectory : publishedMpeg4DirectoryPath;
 
         var quickTimeMasterDirectoryResult = ValidQuickTimeMasterDirectory.Create(quickTimeMasterDirectoryPath);
         if (quickTimeMasterDirectoryResult.IsFailure)
         {
-            return Result.Failure<WorkflowContext, string>("QuickTime master directory does not exist or is not valid.");
+            string errorContext = isQuickTimeMasterDirectoryDefault ?
+                "The default QuickTime master directory does not exist or is not valid." :
+                "The provided QuickTime master directory does not exist or is not valid.";
+            return Result.Failure<WorkflowContext, string>(errorContext);
         }
 
         var publishedMpeg4DirectoryResult = ValidMpeg4Directory.Create(publishedMpeg4DirectoryPath);
         if (publishedMpeg4DirectoryResult.IsFailure)
         {
-            return Result.Failure<WorkflowContext, string>("Published MPEG-4 directory does not exist or is not valid.");
+            string errorContext = isPublishedMpeg4DirectoryDefault ?
+                "The default published MPEG-4 directory does not exist or is not valid." :
+                "The provided published MPEG-4 directory does not exist or is not valid.";
+            return Result.Failure<WorkflowContext, string>(errorContext);
         }
 
-        // Workflow-Kontext erstellen und zurückgeben
+        // Create and return the workflow context
         return Result.Success<WorkflowContext, string>(new WorkflowContext(quickTimeMasterDirectoryResult.Value, publishedMpeg4DirectoryResult.Value));
     }
 }
