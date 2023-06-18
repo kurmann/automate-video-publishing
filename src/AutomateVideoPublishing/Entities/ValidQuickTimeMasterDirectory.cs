@@ -1,6 +1,6 @@
 /// <summary>
 /// Repräsentiert ein gültiges QuickTime-Master-Verzeichnis.
-/// Diese Klasse stellt sicher, dass das angegebene Verzeichnis existiert und enthält eine Sammlung von QuickTime-Dateien innerhalb dieses Verzeichnisses.
+/// Diese Klasse stellt sicher, dass das angegebene Verzeichnis existiert und enthält eine Sammlung von QuickTime-Dateien (.mov) innerhalb dieses Verzeichnisses.
 /// </summary>
 public class ValidQuickTimeMasterDirectory
 {
@@ -14,10 +14,10 @@ public class ValidQuickTimeMasterDirectory
     /// </summary>
     public IEnumerable<FileInfo> QuickTimeFiles { get; }
 
-    private ValidQuickTimeMasterDirectory(DirectoryInfo directory)
+    private ValidQuickTimeMasterDirectory(DirectoryInfo directory, List<FileInfo> quickTimeFiles)
     {
         Directory = directory;
-        QuickTimeFiles = directory.EnumerateFiles("*.mov");
+        QuickTimeFiles = quickTimeFiles;
     }
 
     /// <summary>
@@ -35,6 +35,9 @@ public class ValidQuickTimeMasterDirectory
             return Result.Failure<ValidQuickTimeMasterDirectory>($"Directory {directoryPath} does not exist.");
         }
 
-        return Result.Success(new ValidQuickTimeMasterDirectory(directory));
+        var quickTimeFiles = directory.EnumerateFiles("*", SearchOption.TopDirectoryOnly)
+            .Where(f => string.Equals(f.Extension, ".mov", StringComparison.OrdinalIgnoreCase)).ToList();
+
+        return Result.Success(new ValidQuickTimeMasterDirectory(directory, quickTimeFiles));
     }
 }
