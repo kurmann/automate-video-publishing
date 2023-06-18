@@ -10,7 +10,7 @@ public class ValidQuickTimeMasterDirectory
     public DirectoryInfo Directory { get; }
 
     /// <summary>
-    /// Eine Sammlung von FileInfo-Objekten, die QuickTime-Dateien im Verzeichnis repräsentieren
+    /// Eine Sammlung von FileInfo-Objekten, die QuickTime-Dateien im Verzeichnis repräsentieren. Wenn keine Dateien gefunden werden, ist die Liste leer.
     /// </summary>
     public IEnumerable<FileInfo> QuickTimeFiles { get; }
 
@@ -32,7 +32,7 @@ public class ValidQuickTimeMasterDirectory
         var directory = new DirectoryInfo(directoryPath);
         if (!directory.Exists)
         {
-            return Result.Failure<ValidQuickTimeMasterDirectory>($"Das Verzeichnis {directoryPath} existiert nicht.");
+            return Result.Failure<ValidQuickTimeMasterDirectory>($"Directory {directoryPath} does not exist.");
         }
 
         return Result.Success(new ValidQuickTimeMasterDirectory(directory));
