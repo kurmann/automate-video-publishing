@@ -18,10 +18,19 @@ public class WorkflowContext
     /// <value></value>
     public ValidMpeg4Directory PublishedMpeg4Directory { get; }
 
-    private WorkflowContext(ValidQuickTimeMasterDirectory quickTimeMasterDirectory, ValidMpeg4Directory publishedMpeg4Directory)
+    /// <summary>
+    /// Das Verzeichnis in das die Log-Dateien erstellt werden sollen.
+    /// </summary>
+    /// <value></value>
+    public DirectoryInfo DirectoryInfo { get; }
+
+    private WorkflowContext(ValidQuickTimeMasterDirectory quickTimeMasterDirectory,
+                            ValidMpeg4Directory publishedMpeg4Directory,
+                            DirectoryInfo directoryInfo)
     {
         QuickTimeMasterDirectory = quickTimeMasterDirectory;
         PublishedMpeg4Directory = publishedMpeg4Directory;
+        DirectoryInfo = directoryInfo;
     }
 
     /// <summary>
@@ -30,34 +39,42 @@ public class WorkflowContext
     /// <param name="quickTimeMasterDirectoryPath">Das Verzeichnis indem sich die QuickTime MOV-Masterdateien befinden.</param>
     /// <param name="publishedMpeg4DirectoryPath">Das Standardverzeichnis falls QuickTimeMasterDirectory und/oder PublishedMpeg4Directory.</param>
     /// <returns></returns>
-    public static Result<WorkflowContext, string> Create(string? quickTimeMasterDirectoryPath, string? publishedMpeg4DirectoryPath)
+    public static Result<WorkflowContext> Create(string? quickTimeMasterDirectoryPath = "",
+                                                 string? publishedMpeg4DirectoryPath = "",
+                                                 string? logFilesDirectoryPath = "")
     {
-        // Use default values if none are provided
-        bool isQuickTimeMasterDirectoryDefault = string.IsNullOrWhiteSpace(quickTimeMasterDirectoryPath);
-        bool isPublishedMpeg4DirectoryDefault = string.IsNullOrWhiteSpace(publishedMpeg4DirectoryPath);
-        
-        quickTimeMasterDirectoryPath = isQuickTimeMasterDirectoryDefault ? DefaultDirectory : quickTimeMasterDirectoryPath;
-        publishedMpeg4DirectoryPath = isPublishedMpeg4DirectoryDefault ? DefaultDirectory : publishedMpeg4DirectoryPath;
+        // set values or default
+        quickTimeMasterDirectoryPath = string.IsNullOrWhiteSpace(quickTimeMasterDirectoryPath) ? DefaultDirectory : quickTimeMasterDirectoryPath;
+        publishedMpeg4DirectoryPath = string.IsNullOrWhiteSpace(publishedMpeg4DirectoryPath) ? DefaultDirectory : publishedMpeg4DirectoryPath;
+        logFilesDirectoryPath = string.IsNullOrWhiteSpace(logFilesDirectoryPath) ? DefaultDirectory : logFilesDirectoryPath;
 
         var quickTimeMasterDirectoryResult = ValidQuickTimeMasterDirectory.Create(quickTimeMasterDirectoryPath);
+
         if (quickTimeMasterDirectoryResult.IsFailure)
         {
-            string errorContext = isQuickTimeMasterDirectoryDefault ?
-                "The default QuickTime master directory does not exist or is not valid." :
-                "The provided QuickTime master directory does not exist or is not valid.";
-            return Result.Failure<WorkflowContext, string>(errorContext);
+            return Result.Failure<WorkflowContext>(quickTimeMasterDirectoryResult.Error);
         }
 
         var publishedMpeg4DirectoryResult = ValidMpeg4Directory.Create(publishedMpeg4DirectoryPath);
         if (publishedMpeg4DirectoryResult.IsFailure)
         {
-            string errorContext = isPublishedMpeg4DirectoryDefault ?
-                "The default published MPEG-4 directory does not exist or is not valid." :
-                "The provided published MPEG-4 directory does not exist or is not valid.";
-            return Result.Failure<WorkflowContext, string>(errorContext);
+            return Result.Failure<WorkflowContext>(publishedMpeg4DirectoryResult.Error);
         }
 
-        // Create and return the workflow context
-        return Result.Success<WorkflowContext, string>(new WorkflowContext(quickTimeMasterDirectoryResult.Value, publishedMpeg4DirectoryResult.Value));
+        try
+        {
+            var directoryInfo = new DirectoryInfo(logFilesDirectoryPath);
+            if (!directoryInfo.Exists)
+            {
+                return Result.Failure<WorkflowContext>($"Directory {logFilesDirectoryPath} does not exist");
+            }
+
+            // Create and return the workflow context
+            return new WorkflowContext(quickTimeMasterDirectoryResult.Value, publishedMpeg4DirectoryResult.Value, directoryInfo);
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure<WorkflowContext>($"Error on log files direcotry path: {ex.Message}");
+        }
     }
 }
