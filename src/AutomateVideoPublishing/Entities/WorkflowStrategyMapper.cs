@@ -11,12 +11,13 @@ public class WorkflowStrategyMapper
     // Der Schlüssel ist der Name der Strategie und der Wert ist das zugehörige IWorkflowStrategy-Objekt.
     private static readonly Dictionary<string, IWorkflowStrategy> StrategyMap = new()
     {
+        { nameof(ReadAllMetadataStrategy), new  ReadAllMetadataStrategy() },
         { nameof(TransmitMetadataStrategy), new TransmitMetadataStrategy() }
         // Hier können weitere Strategien hinzugefügt werden.
     };
 
     // Die Standardstrategie, die verwendet wird, wenn keine spezifische Strategie angegeben wird.
-    public const string DefaultStrategy = nameof(TransmitMetadataStrategy);
+    public const string DefaultStrategy = nameof(ReadAllMetadataStrategy);
 
     // Die aktuell gewählte Strategie.
     public IWorkflowStrategy SelectedStrategy { get; private set; }
