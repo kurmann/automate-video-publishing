@@ -1,21 +1,27 @@
-using AutomateVideoPublishing.Strategies;
 using AutomateVideoPublishing.Commands;
+using AutomateVideoPublishing.Strategies;
 
 namespace AutomateVideoPublishing.Entities
 {
-    public class ReadAllMetadataStrategy : IWorkflowStrategy
+    public class ReadAllMetadataStrategy : IWorkflowStrategy<List<FileInfo>>
     {
-        public Result Execute(WorkflowContext context)
+        public Result<List<FileInfo>> Execute(WorkflowContext context)
         {
             var command = new CompositeMetadataReadWithJsonOutputCommand(new CompositeMetadataReadCommand());
             var commandResult = command.Execute(context);
 
-            if (commandResult.FailedFiles.Any())
+            if (commandResult.CreatedJsonFiles.Any(item => item.IsFailure))
             {
-                return Result.Failure(commandResult.GeneralMessage);
+                var failedFiles = commandResult.CreatedJsonFiles
+                    .Where(fileResult => fileResult.IsFailure)
+                    .Select(fileResult => fileResult.Error);
+
+                var errorMessage = "Failed to create JSON files for the following files: " + string.Join(", ", failedFiles);
+                return Result.Failure<List<FileInfo>>(errorMessage);
             }
 
-            return Result.Success("Workflow completed");
+            return commandResult.CreatedJsonFiles.Where(fileResult => fileResult.IsSuccess).Select(file => file.Value).ToList();
         }
+
     }
 }

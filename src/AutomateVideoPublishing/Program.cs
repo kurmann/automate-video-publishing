@@ -27,8 +27,9 @@ class Program
 
         // Strategie mappen und ausführen
         var workflowResult = WorkflowStrategyMapper.Create(options.Workflow)
-            .Map(strategyMapper => strategyMapper.SelectedStrategy.Execute(contextResult.Value));
+            .Map(strategyMapper => strategyMapper.SelectedStrategyHandler.Execute(contextResult.Value));
         Logger.Info(workflowResult.IsFailure ? workflowResult.Error : "Workflow completed");
+
     }
 }
 

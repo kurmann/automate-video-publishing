@@ -1,6 +1,6 @@
 namespace AutomateVideoPublishing.Commands;
 
-public interface ITryExecutionCommand<T>
+public interface ITryExecuteCommand<T>
 {
     T Execute(WorkflowContext context);
 }

@@ -1,6 +1,6 @@
 namespace AutomateVideoPublishing.Commands;
 
-public class CompositeMetadataReadCommand : ITryExecutionCommand<CompositeMetadataReadCommandResult>
+public class CompositeMetadataReadCommand : ITryExecuteCommand<CompositeMetadataReadCommandResult>
 {
     public CompositeMetadataReadCommandResult Execute(WorkflowContext context)
     {
@@ -12,33 +12,16 @@ public class CompositeMetadataReadCommand : ITryExecutionCommand<CompositeMetada
         var commandResult = new CompositeMetadataReadCommandResult();
         foreach (var quickTimeFile in context.QuickTimeMasterDirectory.QuickTimeFiles)
         {
-            var metadataContainerResult = QuickTimeMetadataContainer.Create(quickTimeFile.FullName);
-            if (metadataContainerResult.IsFailure)
-            {
-                commandResult.FailedFiles.Add(quickTimeFile, metadataContainerResult.Error);
-            }
-            else
-            {
-                commandResult.QuickTimeMetadataContainers.Add(metadataContainerResult.Value);
-            }
+            commandResult.QuickTimeMetadataContainers.Add(QuickTimeMetadataContainer.Create(quickTimeFile.FullName));
         }
         foreach (var mpeg4File in context.PublishedMpeg4Directory.Mpeg4Files)
         {
-            var metadataContainerResult = Mpeg4MetadataContainer.Create(mpeg4File.FullName);
-            if (metadataContainerResult.IsFailure)
-            {
-                commandResult.FailedFiles.Add(mpeg4File, metadataContainerResult.Error);
-            }
-            else
-            {
-                commandResult.Mpeg4MetadataContainers.Add(metadataContainerResult.Value);
-            }
+            commandResult.Mpeg4MetadataContainers.Add(Mpeg4MetadataContainer.Create(mpeg4File.FullName));
         }
 
-        if (commandResult.FailedFiles.Any())
+        if (commandResult.QuickTimeMetadataContainers.Any(c => c.IsFailure) || commandResult.Mpeg4MetadataContainers.Any(c => c.IsFailure))
         {
-            commandResult.GeneralMessage = "Could not read all metadata from directories See failed files list for details.";
-            return commandResult;
+            commandResult.GeneralMessage = "Could not read all metadata from directories. See individual container results for details.";
         }
 
         return commandResult;
