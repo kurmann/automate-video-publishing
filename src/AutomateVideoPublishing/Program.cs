@@ -19,7 +19,7 @@ class Program
             .Tap(json => Logger.Info(json));
 
         // Workflow-Kontext erstellen
-        var contextResult = WorkflowContext.Create(options.QuickTimeMasterDirectory, options.PublishedMpeg4Directory, options.LogFilesDirectory);
+        var contextResult = WorkflowContext.Create(options.QuickTimeMasterDirectory, options.PublishedMpeg4Directory);
         if (contextResult.IsFailure)
         {
             Logger.Info($"Error setting up workflow context: {contextResult.Error}");
@@ -41,6 +41,4 @@ public class Options
     public string? PublishedMpeg4Directory { get; set; }
 
     public string? Workflow { get; set; }
-
-    public string? LogFilesDirectory { get; set; }
 }
