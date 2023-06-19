@@ -1,18 +1,21 @@
 using AutomateVideoPublishing.Strategies;
 using AutomateVideoPublishing.Commands;
 
-namespace AutomateVideoPublishing.Entities;
-
-public class ReadAllMetadataStrategy : IWorkflowStrategy
+namespace AutomateVideoPublishing.Entities
 {
-    public Result Execute(WorkflowContext context)
+    public class ReadAllMetadataStrategy : IWorkflowStrategy
     {
-        var command = new CompositeMetadataReadCommand();
-        var commandResult = command.Execute(context);
+        public Result Execute(WorkflowContext context)
+        {
+            var command = new CompositeMetadataReadWithJsonOutputCommand(new CompositeMetadataReadCommand());
+            var commandResult = command.Execute(context);
 
-        if (commandResult.FailedFiles.Any()){
-            return Result.Failure(commandResult.GeneralMessage);
+            if (commandResult.FailedFiles.Any())
+            {
+                return Result.Failure(commandResult.GeneralMessage);
+            }
+
+            return Result.Success("Workflow completed");
         }
-        return Result.Success("Workflow completed");
     }
 }
