@@ -47,13 +47,13 @@ public class Mpeg4MetadataContainer : MediaFileInfoContainer
             return Result.Failure<Mpeg4MetadataContainer>($"File {filePath} is not a MPEG-4 .m4v or .mp4 file.");
         }
 
-        var metadataResult = TryGetMetadata(result.Value.File);
+        var metadataResult = TryGetMetadata(result.Value.FileInfo);
         if (metadataResult.IsFailure)
         {
             return Result.Failure<Mpeg4MetadataContainer>(metadataResult.Error);
         }
 
-        return Result.Success(new Mpeg4MetadataContainer(result.Value.File, result.Value.MediaType, metadataResult.Value));
+        return Result.Success(new Mpeg4MetadataContainer(result.Value.FileInfo, result.Value.MediaType, metadataResult.Value));
     }
 }
 

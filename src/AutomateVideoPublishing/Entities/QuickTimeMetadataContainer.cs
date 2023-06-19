@@ -41,12 +41,12 @@ public class QuickTimeMetadataContainer : MediaFileInfoContainer
             return Result.Failure<QuickTimeMetadataContainer>($"File {filePath} is not a QuickTime .mov file.");
         }
 
-        var metadataResult = TryGetQuickTimeMetadata(result.Value.File);
+        var metadataResult = TryGetQuickTimeMetadata(result.Value.FileInfo);
         if (metadataResult.IsFailure)
         {
             return Result.Failure<QuickTimeMetadataContainer>(metadataResult.Error);
         }
 
-        return Result.Success(new QuickTimeMetadataContainer(result.Value.File, result.Value.MediaType, metadataResult.Value));
+        return Result.Success(new QuickTimeMetadataContainer(result.Value.FileInfo, result.Value.MediaType, metadataResult.Value));
     }
 }

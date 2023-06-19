@@ -28,7 +28,7 @@ public class MediaFileInfoContainer
     /// Die Mediendatei, von der Metadaten gelesen werden. 
     /// Es muss eine .mov, .m4v oder .mp4 Datei sein.
     /// </summary>
-    public FileInfo File { get; private set; }
+    public FileInfo FileInfo { get; private set; }
 
     /// <summary>
     /// Der Medien-Typ der verwalteten Datei.
@@ -38,7 +38,7 @@ public class MediaFileInfoContainer
     // Protected Konstruktor, der nur innerhalb dieser Klasse aufgerufen werden kann.
     protected MediaFileInfoContainer(FileInfo file, MediaType mediaType)
     {
-        File = file;
+        FileInfo = file;
         MediaType = mediaType;
     }
 
