@@ -12,7 +12,7 @@ public class CompositeMetadataReadCommand : ITryExecutionCommand<CompositeMetada
         var commandResult = new CompositeMetadataReadCommandResult();
         foreach (var quickTimeFile in context.QuickTimeMasterDirectory.QuickTimeFiles)
         {
-            var metadataContainerResult = QuickTimeMediaFileContainer.Create(quickTimeFile.FullName);
+            var metadataContainerResult = QuickTimeMetadataContainer.Create(quickTimeFile.FullName);
             if (metadataContainerResult.IsFailure)
             {
                 commandResult.FailedFiles.Add(quickTimeFile, metadataContainerResult.Error);
@@ -48,7 +48,7 @@ public class CompositeMetadataReadCommand : ITryExecutionCommand<CompositeMetada
 public class CompositeMetadataReadCommandResult
 {
     public string? GeneralMessage { get; set; }
-    public List<QuickTimeMediaFileContainer> QuickTimeMetadataContainers { get; set; } = new List<QuickTimeMediaFileContainer>();
+    public List<QuickTimeMetadataContainer> QuickTimeMetadataContainers { get; set; } = new List<QuickTimeMetadataContainer>();
     public List<Mpeg4MetadataContainer> Mpeg4MetadataContainers { get; set; } = new List<Mpeg4MetadataContainer>();
     public Dictionary<FileInfo, string> FailedFiles { get; set; } = new Dictionary<FileInfo, string>();
 
