@@ -1,7 +1,10 @@
 ﻿using Microsoft.Extensions.Configuration;
+using NLog;
 
 class Program
 {
+    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
     static void Main(string[] args)
     {
         var configuration = new ConfigurationBuilder()
@@ -12,20 +15,21 @@ class Program
         var options = new Options();
         configuration.Bind(options);
 
-        Console.WriteLine($"Workflow param: {options.Workflow}");
+        FormattedUnicodeJson.Create(options)
+            .Tap(json => Logger.Info(json));
 
         // Workflow-Kontext erstellen
-        var contextResult = WorkflowContext.Create(options.QuickTimeMasterDirectory, options.PublishedMpeg4Directory);
+        var contextResult = WorkflowContext.Create(options.QuickTimeMasterDirectory, options.PublishedMpeg4Directory, options.LogFilesDirectory);
         if (contextResult.IsFailure)
         {
-            Console.WriteLine($"Error setting up workflow context: {contextResult.Error}");
+            Logger.Info($"Error setting up workflow context: {contextResult.Error}");
             return;
         }
 
         // Strategie mappen und ausführen
         var workflowResult = WorkflowStrategyMapper.Create(options.Workflow)
             .Map(strategyMapper => strategyMapper.SelectedStrategy.Execute(contextResult.Value));
-        Console.WriteLine(workflowResult.IsFailure ? workflowResult.Error : "Workflow completed");
+        Logger.Info(workflowResult.IsFailure ? workflowResult.Error : "Workflow completed");
     }
 }
 
@@ -37,4 +41,6 @@ public class Options
     public string? PublishedMpeg4Directory { get; set; }
 
     public string? Workflow { get; set; }
+
+    public string? LogFilesDirectory { get; set; }
 }
