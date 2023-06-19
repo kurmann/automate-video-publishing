@@ -1,5 +1,3 @@
-using System.Text.Json;
-
 namespace AutomateVideoPublishing.Commands
 {
     public class CompositeMetadataReadWithJsonOutputCommand : ITryExecutionCommand<CompositeMetadataReadCommandResult>
@@ -18,14 +16,21 @@ namespace AutomateVideoPublishing.Commands
                 return commandResult;
             }
 
-            foreach (var quickTimeMetadata in commandResult.QuickTimeMetadataContainers)
+            foreach (var file in commandResult.QuickTimeMetadataContainers.Select(qt => qt.FileInfo)
+                .Concat(commandResult.Mpeg4MetadataContainers.Select(mp => mp.FileInfo)))
             {
-                File.WriteAllText(Path.ChangeExtension(quickTimeMetadata.File.FullName, ".json"), JsonSerializer.Serialize(quickTimeMetadata.RawMetadata));
-            }
+                var jsonResult = MediaMetadataJson.Create(file.FullName);
 
-            foreach (var mpeg4Metadata in commandResult.Mpeg4MetadataContainers)
-            {
-                File.WriteAllText(Path.ChangeExtension(mpeg4Metadata.File.FullName, ".json"), JsonSerializer.Serialize(mpeg4Metadata.Tags));
+                if (jsonResult.IsSuccess)
+                {
+                    var jsonFile = new FileInfo(Path.ChangeExtension(file.FullName, ".json"));
+                    File.WriteAllText(jsonFile.FullName, jsonResult.Value.Json);
+                    commandResult.CreatedJsonFiles.Add(jsonFile);
+                }
+                else
+                {
+                    commandResult.FailedFiles.Add(file, jsonResult.Error);
+                }
             }
 
             return commandResult;
