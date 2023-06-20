@@ -1,4 +1,4 @@
-public interface ICommand
+public interface ICommand<T>
 {
-    Task Execute();
+    Task<Result<T>> Execute();
 }
