@@ -1,4 +1,4 @@
 public interface ICommand
 {
-    Task StartExecute();
+    Task Execute();
 }
