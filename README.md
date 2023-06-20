@@ -43,7 +43,7 @@ Dieses Projekt ist lizenziert unter der MIT-Lizenz. Siehe [LICENSE](LICENSE.txt)
 
 ## Archivierter Legacy Code
 
-Das Projekt begann ursprünglich mit Shell- und Python-Skripten. Mit den wachsenden Anforderungen und dem Wunsch nach weniger Konfiguration (all-in-one-Package) wurde jedoch eine Entscheidung getroffen, zu .NET 7.0 zu wechseln. Die genauen Beweggründe für diesen Wechsel sind im entsprechenden Unterkapitel beschrieben.
+Das Projekt begann ursprünglich mit Shell- und Python-Skripten. Mit den wachsenden Anforderungen und dem Wunsch nach weniger Konfiguration (all-in-one-Package) wurde jedoch eine Entscheidung getroffen, zu .NET 7.0 zu wechseln. Die genauen Beweggründe für diesen Wechsel sind im [entsprechenden Unterkapitel](https://github.com/kurmann/automate-video-publishing/tree/main/legacy#wechsel-von-python-zu-net) beschrieben.
 
 Die ursprünglichen Skripte boten jedoch einige nützliche Funktionen, wie beispielsweise die automatische Übertragung von Metadaten vom QuickTime Apple ProRes Masterfile zur komprimierten M4V-Datei. Aus diesem Grund wurden diese Skripte archiviert und sind im Verzeichnis [Legacy](https://github.com/kurmann/automate-video-publishing/tree/main/legacy) zu finden. Sie sind dort weiterhin dokumentiert und zugänglich.
 
