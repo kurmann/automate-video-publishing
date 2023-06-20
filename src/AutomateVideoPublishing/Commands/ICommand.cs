@@ -1,4 +1,6 @@
-public interface ICommand<T>
+public interface ICommand<T, TEventArg> where TEventArg : EventArgs
 {
-    Task<Result<T>> Execute();
+    event EventHandler<TEventArg>? CommandProgressChanged;
+
+    Task<Result<T>> Execute(WorkflowContext context);
 }
