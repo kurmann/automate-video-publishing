@@ -1,8 +1,8 @@
-public class QuickTimeMetadataReadCommand : IObservableCommand<List<QuickTimeMetadataContainer>, QuickTimeMetadataContainer>
+public class QuickTimeMetadataReadCommand : IObservableCommand<QuickTimeMetadataContainer>
 {
     private List<IObserver<QuickTimeMetadataContainer>> observers = new();
 
-    public Task<Result<List<QuickTimeMetadataContainer>>> Execute(WorkflowContext context)
+    public Task Execute(WorkflowContext context)
     {
         if (context == null)
         {
@@ -22,7 +22,7 @@ public class QuickTimeMetadataReadCommand : IObservableCommand<List<QuickTimeMet
             NotifyObservers(containerResult.Value); // added to notify observers
         }
 
-        return Task.FromResult(Result.Success(containers));
+        return Task.CompletedTask;
     }
 
     public IDisposable Subscribe(IObserver<QuickTimeMetadataContainer> observer)
