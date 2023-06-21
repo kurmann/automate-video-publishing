@@ -1,3 +1,5 @@
+namespace AutomateVideoPublishing.Strategies;
+
 public class WorkflowStrategyMapper
 {
     public const string ReadAllMetadataStrategy = nameof(ReadAllMetadataStrategy);
