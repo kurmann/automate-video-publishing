@@ -1,35 +1,29 @@
 public class Mpeg4DirectoryMetadataReadCommand : ICommand
 {
-    public event EventHandler<Mpeg4CommandProgressChangedEventArgs>? CommandProgressChanged;
+    private EventBroadcaster<Mpeg4MetadataContainer> broadcaster = new EventBroadcaster<Mpeg4MetadataContainer>();
 
     public Task Execute(WorkflowContext context)
     {
         if (context == null)
         {
-            return Task.FromResult(Result.Failure<List<Mpeg4MetadataContainer>>("Workflow context cannot be null."));
+            throw new ArgumentNullException(nameof(context));
         }
 
-        var containers = new List<Mpeg4MetadataContainer>();
         foreach (var mpeg4File in context.PublishedMpeg4Directory.Mpeg4Files)
         {
             var containerResult = Mpeg4MetadataContainer.Create(mpeg4File.FullName);
             if (containerResult.IsFailure)
             {
-                return Task.FromResult(Result.Failure<List<Mpeg4MetadataContainer>>(containerResult.Error));
+                broadcaster.BroadcastError(containerResult.Error);
+                return Task.CompletedTask;
             }
 
-            containers.Add(containerResult.Value);
-            CommandProgressChanged?.Invoke(this, new Mpeg4CommandProgressChangedEventArgs(containerResult.Value));
+            broadcaster.BroadcastNext(containerResult.Value);
         }
 
+        broadcaster.BroadcastCompleted();
         return Task.CompletedTask;
     }
-}
 
-public class Mpeg4CommandProgressChangedEventArgs : EventArgs
-{
-    public Mpeg4MetadataContainer Mpeg4MetadataContainer { get; }
-
-    public Mpeg4CommandProgressChangedEventArgs(Mpeg4MetadataContainer mpeg4MetadataContainer) 
-        => Mpeg4MetadataContainer = mpeg4MetadataContainer ?? throw new ArgumentNullException(nameof(mpeg4MetadataContainer));
+    public IDisposable Subscribe(IObserver<Mpeg4MetadataContainer> observer) => broadcaster.Subscribe(observer);
 }
