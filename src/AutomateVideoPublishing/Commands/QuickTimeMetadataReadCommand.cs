@@ -1,4 +1,4 @@
-public class QuickTimeMetadataReadCommand : IObservableCommand<QuickTimeMetadataContainer>
+public class QuickTimeMetadataReadCommand : IObservable<QuickTimeMetadataContainer>, ICommand
 {
     private List<IObserver<QuickTimeMetadataContainer>> observers = new();
 
@@ -6,22 +6,22 @@ public class QuickTimeMetadataReadCommand : IObservableCommand<QuickTimeMetadata
     {
         if (context == null)
         {
-            return Task.FromResult(Result.Failure<List<QuickTimeMetadataContainer>>("Workflow context cannot be null."));
+            throw new ArgumentNullException(nameof(context));
         }
 
-        var containers = new List<QuickTimeMetadataContainer>();
         foreach (var quickTimeFile in context.QuickTimeMasterDirectory.QuickTimeFiles)
         {
             var containerResult = QuickTimeMetadataContainer.Create(quickTimeFile.FullName);
             if (containerResult.IsFailure)
             {
-                return Task.FromResult(Result.Failure<List<QuickTimeMetadataContainer>>(containerResult.Error));
+                NotifyObserversError(containerResult.Error);
+                return Task.CompletedTask;
             }
 
-            containers.Add(containerResult.Value);
-            NotifyObservers(containerResult.Value); // added to notify observers
+            NotifyObserversNext(containerResult.Value);
         }
 
+        NotifyObserversCompleted();
         return Task.CompletedTask;
     }
 
@@ -35,11 +35,27 @@ public class QuickTimeMetadataReadCommand : IObservableCommand<QuickTimeMetadata
         return new Unsubscriber<QuickTimeMetadataContainer>(observers, observer);
     }
 
-    private void NotifyObservers(QuickTimeMetadataContainer container)
+    private void NotifyObserversNext(QuickTimeMetadataContainer container)
     {
         foreach (var observer in observers)
         {
             observer.OnNext(container);
+        }
+    }
+
+    private void NotifyObserversError(string error)
+    {
+        foreach (var observer in observers)
+        {
+            observer.OnError(new Exception(error));
+        }
+    }
+
+    private void NotifyObserversCompleted()
+    {
+        foreach (var observer in observers)
+        {
+            observer.OnCompleted();
         }
     }
 }
