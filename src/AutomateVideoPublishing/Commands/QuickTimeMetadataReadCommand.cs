@@ -1,6 +1,6 @@
-public class QuickTimeMetadataReadCommand : ICommand<List<QuickTimeMetadataContainer>, QuickTimeCommandProgressChangedEventArgs>
+public class QuickTimeMetadataReadCommand : IObservableCommand<List<QuickTimeMetadataContainer>, QuickTimeMetadataContainer>
 {
-    public event EventHandler<QuickTimeCommandProgressChangedEventArgs>? CommandProgressChanged;
+    private List<IObserver<QuickTimeMetadataContainer>> observers = new();
 
     public Task<Result<List<QuickTimeMetadataContainer>>> Execute(WorkflowContext context)
     {
@@ -19,17 +19,27 @@ public class QuickTimeMetadataReadCommand : ICommand<List<QuickTimeMetadataConta
             }
 
             containers.Add(containerResult.Value);
-            CommandProgressChanged?.Invoke(this, new QuickTimeCommandProgressChangedEventArgs(containerResult.Value));
+            NotifyObservers(containerResult.Value); // added to notify observers
         }
 
         return Task.FromResult(Result.Success(containers));
     }
-}
 
-public class QuickTimeCommandProgressChangedEventArgs : EventArgs
-{
-    public QuickTimeMetadataContainer QuickTimeMetadataContainer { get; }
+    public IDisposable Subscribe(IObserver<QuickTimeMetadataContainer> observer)
+    {
+        if (!observers.Contains(observer))
+        {
+            observers.Add(observer);
+        }
 
-    public QuickTimeCommandProgressChangedEventArgs(QuickTimeMetadataContainer quickTimeMetadataContainer)
-        => QuickTimeMetadataContainer = quickTimeMetadataContainer ?? throw new ArgumentNullException(nameof(quickTimeMetadataContainer));
+        return new Unsubscriber<QuickTimeMetadataContainer>(observers, observer);
+    }
+
+    private void NotifyObservers(QuickTimeMetadataContainer container)
+    {
+        foreach (var observer in observers)
+        {
+            observer.OnNext(container);
+        }
+    }
 }
