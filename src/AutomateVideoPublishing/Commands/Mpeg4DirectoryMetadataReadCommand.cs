@@ -1,7 +1,8 @@
-public class Mpeg4DirectoryMetadataReadCommand : ICommand<List<Mpeg4MetadataContainer>, Mpeg4CommandProgressChangedEventArgs>{
+public class Mpeg4DirectoryMetadataReadCommand : ICommand
+{
     public event EventHandler<Mpeg4CommandProgressChangedEventArgs>? CommandProgressChanged;
 
-    public Task<Result<List<Mpeg4MetadataContainer>>> Execute(WorkflowContext context)
+    public Task Execute(WorkflowContext context)
     {
         if (context == null)
         {
@@ -21,7 +22,7 @@ public class Mpeg4DirectoryMetadataReadCommand : ICommand<List<Mpeg4MetadataCont
             CommandProgressChanged?.Invoke(this, new Mpeg4CommandProgressChangedEventArgs(containerResult.Value));
         }
 
-        return Task.FromResult(Result.Success(containers));
+        return Task.CompletedTask;
     }
 }
 
