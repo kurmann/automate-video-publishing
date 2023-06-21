@@ -1,17 +1,38 @@
-public class EventBroadcaster
+public class EventBroadcaster<T> : IObservable<T>
 {
-    private Dictionary<Type, object> eventHandlers = new();
+    private List<IObserver<T>> observers = new();
 
-    public void Publish<T>(T eventInstance)
+    public IDisposable Subscribe(IObserver<T> observer)
     {
-        if (eventHandlers.TryGetValue(typeof(T), out var handler))
+        if (!observers.Contains(observer))
         {
-            ((Action<T>)handler)(eventInstance);
+            observers.Add(observer);
+        }
+
+        return new Unsubscriber<T>(observers, observer);
+    }
+
+    public void BroadcastNext(T value)
+    {
+        foreach (var observer in observers)
+        {
+            observer.OnNext(value);
         }
     }
 
-    public void Subscribe<T>(Action<T> eventHandler)
+    public void BroadcastError(string error)
     {
-        eventHandlers[typeof(T)] = eventHandler;
+        foreach (var observer in observers)
+        {
+            observer.OnError(new Exception(error));
+        }
+    }
+
+    public void BroadcastCompleted()
+    {
+        foreach (var observer in observers)
+        {
+            observer.OnCompleted();
+        }
     }
 }

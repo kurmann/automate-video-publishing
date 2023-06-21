@@ -1,6 +1,6 @@
-public class QuickTimeMetadataReadCommand : IObservable<QuickTimeMetadataContainer>, ICommand
+public class QuickTimeMetadataReadCommand : ICommand
 {
-    private List<IObserver<QuickTimeMetadataContainer>> observers = new();
+    private EventBroadcaster<QuickTimeMetadataContainer> broadcaster = new();
 
     public Task Execute(WorkflowContext context)
     {
@@ -14,48 +14,16 @@ public class QuickTimeMetadataReadCommand : IObservable<QuickTimeMetadataContain
             var containerResult = QuickTimeMetadataContainer.Create(quickTimeFile.FullName);
             if (containerResult.IsFailure)
             {
-                NotifyObserversError(containerResult.Error);
+                broadcaster.BroadcastError(containerResult.Error);
                 return Task.CompletedTask;
             }
 
-            NotifyObserversNext(containerResult.Value);
+            broadcaster.BroadcastNext(containerResult.Value);
         }
 
-        NotifyObserversCompleted();
+        broadcaster.BroadcastCompleted();
         return Task.CompletedTask;
     }
 
-    public IDisposable Subscribe(IObserver<QuickTimeMetadataContainer> observer)
-    {
-        if (!observers.Contains(observer))
-        {
-            observers.Add(observer);
-        }
-
-        return new Unsubscriber<QuickTimeMetadataContainer>(observers, observer);
-    }
-
-    private void NotifyObserversNext(QuickTimeMetadataContainer container)
-    {
-        foreach (var observer in observers)
-        {
-            observer.OnNext(container);
-        }
-    }
-
-    private void NotifyObserversError(string error)
-    {
-        foreach (var observer in observers)
-        {
-            observer.OnError(new Exception(error));
-        }
-    }
-
-    private void NotifyObserversCompleted()
-    {
-        foreach (var observer in observers)
-        {
-            observer.OnCompleted();
-        }
-    }
+    public IDisposable Subscribe(IObserver<QuickTimeMetadataContainer> observer) => broadcaster.Subscribe(observer);
 }
