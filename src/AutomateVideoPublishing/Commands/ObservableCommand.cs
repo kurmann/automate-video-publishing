@@ -1,5 +1,4 @@
-public interface IObservableCommand<TResult, TEvent>
+public interface IObservableCommand<TEvent> : IObservable<TEvent>
 {
-    Task<Result<TResult>> Execute(WorkflowContext context);
-    IDisposable Subscribe(IObserver<TEvent> observer);
+    Task Execute(WorkflowContext context);
 }
