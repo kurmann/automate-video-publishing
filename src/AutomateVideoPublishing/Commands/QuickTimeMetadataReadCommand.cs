@@ -1,8 +1,15 @@
-public class QuickTimeMetadataReadCommand : ICommand
-{
-    private EventBroadcaster<QuickTimeMetadataContainer> broadcaster = new();
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
 
-    public Task ExecuteAsync(WorkflowContext context)
+namespace AutomateVideoPublishing.Commands;
+
+public class QuickTimeMetadataReadCommand : ICommand<QuickTimeMetadataContainer>
+{
+    private readonly Subject<QuickTimeMetadataContainer> _metadataAvailable = new();
+
+    public IObservable<QuickTimeMetadataContainer> WhenDataAvailable => _metadataAvailable.AsObservable();
+
+    public void Execute(WorkflowContext context)
     {
         if (context == null)
         {
@@ -14,16 +21,13 @@ public class QuickTimeMetadataReadCommand : ICommand
             var containerResult = QuickTimeMetadataContainer.Create(quickTimeFile.FullName);
             if (containerResult.IsFailure)
             {
-                broadcaster.BroadcastError(containerResult.Error);
-                return Task.CompletedTask;
+                _metadataAvailable.OnError(new Exception(containerResult.Error));
+                return;
             }
 
-            broadcaster.BroadcastNext(containerResult.Value);
+            _metadataAvailable.OnNext(containerResult.Value);
         }
 
-        broadcaster.BroadcastCompleted();
-        return Task.CompletedTask;
+        _metadataAvailable.OnCompleted();
     }
-
-    public IDisposable Subscribe(IObserver<QuickTimeMetadataContainer> observer) => broadcaster.Subscribe(observer);
 }

@@ -1,8 +1,15 @@
-public class Mpeg4DirectoryMetadataReadCommand : ICommand
-{
-    private EventBroadcaster<Mpeg4MetadataContainer> broadcaster = new EventBroadcaster<Mpeg4MetadataContainer>();
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
 
-    public Task ExecuteAsync(WorkflowContext context)
+namespace AutomateVideoPublishing.Commands;
+
+public class Mpeg4DirectoryMetadataReadCommand : ICommand<Mpeg4MetadataContainer>
+{
+    private readonly Subject<Mpeg4MetadataContainer> _broadcaster = new();
+
+    public IObservable<Mpeg4MetadataContainer> WhenDataAvailable => _broadcaster.AsObservable();
+
+    public void Execute(WorkflowContext context)
     {
         if (context == null)
         {
@@ -14,16 +21,13 @@ public class Mpeg4DirectoryMetadataReadCommand : ICommand
             var containerResult = Mpeg4MetadataContainer.Create(mpeg4File.FullName);
             if (containerResult.IsFailure)
             {
-                broadcaster.BroadcastError(containerResult.Error);
-                return Task.CompletedTask;
+                _broadcaster.OnError(new Exception(containerResult.Error));
+                return;
             }
 
-            broadcaster.BroadcastNext(containerResult.Value);
+            _broadcaster.OnNext(containerResult.Value);
         }
 
-        broadcaster.BroadcastCompleted();
-        return Task.CompletedTask;
+        _broadcaster.OnCompleted();
     }
-
-    public IDisposable Subscribe(IObserver<Mpeg4MetadataContainer> observer) => broadcaster.Subscribe(observer);
 }

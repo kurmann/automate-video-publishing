@@ -8,9 +8,9 @@ namespace AutomateVideoPublishing.Entities
     {
         private Subject<string> _broadcaster = new();
 
-        public IObservable<string> EventBroadcaster => _broadcaster.AsObservable();
+        public IObservable<string> WhenStatusUpdateAvailable => _broadcaster.AsObservable();
 
-        public async Task ExecuteAsync(WorkflowContext context)
+        public void Execute(WorkflowContext context)
         {
             // Führen Sie hier die Übertragung der Metadaten durch.
             // Dies ist momentan ein Platzhalter und muss entsprechend Ihrem Bedarf implementiert werden.
@@ -20,9 +20,6 @@ namespace AutomateVideoPublishing.Entities
 
             // und dann die Fertigstellung melden
             _broadcaster.OnCompleted();
-
-            // Da es sich um einen Platzhalter handelt, ist die Aufgabe bereits abgeschlossen
-            await Task.CompletedTask;
         }
     }
 }

@@ -1,57 +1,50 @@
-public class WriteJsonMetadataCommand : ICommand, IObserver<QuickTimeMetadataContainer>, IObserver<Mpeg4MetadataContainer>
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
+using System.Reactive.Threading.Tasks;
+
+namespace AutomateVideoPublishing.Commands;
+
+public class WriteJsonMetadataCommand : ICommand<string>
 {
     private readonly QuickTimeMetadataReadCommand _quickTimeCommand;
     private readonly Mpeg4DirectoryMetadataReadCommand _mpeg4Command;
-    private readonly EventBroadcaster<FileInfo> _broadcaster;
+    private readonly Subject<string> _broadcaster = new Subject<string>();
 
-    public WriteJsonMetadataCommand(
-        QuickTimeMetadataReadCommand quickTimeCommand,
-        Mpeg4DirectoryMetadataReadCommand mpeg4Command)
+    public IObservable<string> WhenDataAvailable => _broadcaster.AsObservable();
+
+    public WriteJsonMetadataCommand(QuickTimeMetadataReadCommand quickTimeCommand, Mpeg4DirectoryMetadataReadCommand mpeg4Command)
     {
         _quickTimeCommand = quickTimeCommand;
         _mpeg4Command = mpeg4Command;
-        _broadcaster = new EventBroadcaster<FileInfo>();
     }
 
-    public async Task ExecuteAsync(WorkflowContext context)
+    public void Execute(WorkflowContext context)
     {
-        if (context == null)
-        {
-            _broadcaster.BroadcastError("Workflow context cannot be null.");
-            return;
-        }
+        // Merge the data streams from both commands into one
+        _quickTimeCommand.WhenDataAvailable
+            .SelectMany(container => WriteJsonAsync(container.FileInfo).ToObservable())
+            .Merge(_mpeg4Command.WhenDataAvailable.SelectMany(container => WriteJsonAsync(container.FileInfo).ToObservable()))
+            .Subscribe(_broadcaster);
 
-        _quickTimeCommand.Subscribe(this);
-        _mpeg4Command.Subscribe(this);
-        
-        await _quickTimeCommand.ExecuteAsync(context);
-        await _mpeg4Command.ExecuteAsync(context);
-        
-        _broadcaster.BroadcastCompleted();
+        _quickTimeCommand.Execute(context);
+        _mpeg4Command.Execute(context);
+
+        _broadcaster.OnCompleted();
     }
 
-    public IDisposable Subscribe(IObserver<FileInfo> observer) => _broadcaster.Subscribe(observer);
-
-    public void OnCompleted() { }
-
-    public void OnError(Exception error) => _broadcaster.BroadcastError(error.Message);
-
-    public void OnNext(QuickTimeMetadataContainer container) => WriteJsonAsync(container.FileInfo);
-
-    public void OnNext(Mpeg4MetadataContainer container) => WriteJsonAsync(container.FileInfo);
-
-    private async Task WriteJsonAsync(FileInfo fileInfo)
+    private async Task<string> WriteJsonAsync(FileInfo fileInfo)
     {
         var jsonResult = MediaMetadataJson.Create(fileInfo.FullName);
         if (jsonResult.IsSuccess)
         {
             var jsonFile = new FileInfo(Path.ChangeExtension(fileInfo.FullName, ".json"));
             await File.WriteAllTextAsync(jsonFile.FullName, jsonResult.Value.Json);
-            _broadcaster.BroadcastNext(jsonFile);
+            return jsonFile.FullName;
         }
         else
         {
-            _broadcaster.BroadcastError($"Json file from file {fileInfo} could not be generated.");
+            _broadcaster.OnError(new Exception($"Json file from file {fileInfo} could not be generated."));
+            return string.Empty;
         }
     }
 }

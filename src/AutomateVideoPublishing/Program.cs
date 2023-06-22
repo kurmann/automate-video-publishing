@@ -33,7 +33,7 @@ class Program
         
         // Erzeuge einen LogObserver und abonniere die Ereignisse der ausgewählten Workflow-Strategie.
         var logObserver = new LogObserver();
-        var strategyUnsubscriber = strategyResult.Value.SelectedStrategy.EventBroadcaster.Subscribe(logObserver);
+        var strategyUnsubscriber = strategyResult.Value.SelectedStrategy.WhenStatusUpdateAvailable.Subscribe(logObserver);
 
         // Erzeuge den Workflow-Kontext, der Daten enthält, die für alle Workflow-Strategien nützlich sind. 
         // Bei einem Fehler wird ein entsprechender Log-Eintrag erstellt und das Programm wird beendet.
@@ -48,7 +48,7 @@ class Program
 
         // Führe die ausgewählte Workflow-Strategie aus. Die Strategien selbst bestehen aus einer Abfolge
         // von Befehlen (Commands), deren Execute-Methode den Workflow implementiert.
-        var executionResult = strategyResult.Value.SelectedStrategy.ExecuteAsync(contextResult.Value);
+        strategyResult.Value.SelectedStrategy.Execute(contextResult.Value);
 
         // Log-Observer abschliessen
         // Diese Methode wird aufgerufen, um dem LogObserver zu signalisieren, dass das Observable, auf das er

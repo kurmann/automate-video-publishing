@@ -1,33 +1,34 @@
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using AutomateVideoPublishing.Commands;
 
 namespace AutomateVideoPublishing.Strategies;
 
-public class ReadAllMetadataStrategy : IWorkflowStrategy, IObserver<FileInfo>
+public class ReadAllMetadataStrategy : IWorkflowStrategy
 {
-    private Subject<string> _broadcaster = new();
-    private WriteJsonMetadataCommand _writeCommand;
+    private readonly Subject<string> _broadcaster = new();
+    private readonly WriteJsonMetadataCommand _writeCommand;
 
-    public IObservable<string> EventBroadcaster => _broadcaster.AsObservable();
+    public IObservable<string> WhenStatusUpdateAvailable => _broadcaster.AsObservable();
 
     public ReadAllMetadataStrategy()
     {
         var quickTimeCommand = new QuickTimeMetadataReadCommand();
         var mpeg4Command = new Mpeg4DirectoryMetadataReadCommand();
         _writeCommand = new WriteJsonMetadataCommand(quickTimeCommand, mpeg4Command);
-        _writeCommand.Subscribe(this);
     }
 
-    public async Task ExecuteAsync(WorkflowContext context)
+    public void Execute(WorkflowContext context)
     {
-        await _writeCommand.ExecuteAsync(context);
-        _broadcaster.OnNext("ReadAllMetadataStrategy execution was successful.");
-        _broadcaster.OnCompleted();
+        _writeCommand.WhenDataAvailable.Subscribe(
+            onNext: filepath => _broadcaster.OnNext($"New Json file created: {filepath}"),
+            onError: ex => _broadcaster.OnError(ex),
+            onCompleted: () => {
+                _broadcaster.OnNext("ReadAllMetadataStrategy execution was successful.");
+                _broadcaster.OnCompleted();
+            }
+        );
+
+        _writeCommand.Execute(context);
     }
-
-    public void OnCompleted() { }
-
-    public void OnError(Exception error) => _broadcaster.OnError(error);
-
-    public void OnNext(FileInfo jsonFile) => _broadcaster.OnNext($"New Json file created: {jsonFile.FullName}");
 }
