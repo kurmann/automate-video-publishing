@@ -2,27 +2,37 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using AutomateVideoPublishing.Commands;
 
-namespace AutomateVideoPublishing.Strategies;
-
-public class VideoPublishAndArchiveStrategy : IWorkflowStrategy
+namespace AutomateVideoPublishing.Strategies
 {
-    private Subject<string> _broadcaster = new();
-
-    public IObservable<string> WhenStatusUpdateAvailable => _broadcaster.AsObservable();
-
-    public void Execute(WorkflowContext context)
+    public class VideoPublishAndArchiveStrategy : IWorkflowStrategy
     {
-        var metadataReadCommand = new QuickTimeMetadataReadCommand();
-        var metadataTransferCommand = new MetadataTransferCommand(metadataReadCommand);
+        private Subject<string> _broadcaster = new();
 
-        metadataTransferCommand.WhenDataAvailable.Subscribe(transferredMetadata =>
+        public IObservable<string> WhenStatusUpdateAvailable => _broadcaster.AsObservable();
+
+        public void Execute(WorkflowContext context)
         {
-            string message = $"Metadaten übertragen für Datei: {transferredMetadata.FileName}, Beschreibung: {transferredMetadata.Description}, Jahr: {transferredMetadata.Year}.";
-            _broadcaster.OnNext(message);
-        });
+            var metadataReadCommand = new QuickTimeMetadataReadCommand();
+            var metadataTransferCommand = new MetadataTransferCommand(metadataReadCommand);
 
-        metadataTransferCommand.Execute(context);
+            metadataTransferCommand.WhenDataAvailable.Subscribe(
+                transferredMetadata =>
+                {
+                    if (transferredMetadata != null)
+                    {
+                        _broadcaster.OnNext(transferredMetadata.SummaryMessage);
+                    }
+                },
+                exception =>
+                {
+                    // Handle any error
+                    _broadcaster.OnError(exception);
+                }
+            );
 
-        _broadcaster.OnCompleted();
+            metadataTransferCommand.Execute(context);
+
+            _broadcaster.OnCompleted();
+        }
     }
 }
