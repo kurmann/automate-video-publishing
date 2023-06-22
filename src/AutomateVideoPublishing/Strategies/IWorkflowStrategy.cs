@@ -1,6 +1,6 @@
 namespace AutomateVideoPublishing.Strategies;
 
-public interface IWorkflowStrategy<T>
+public interface IWorkflowStrategy
 {
-    Result<T> Execute(WorkflowContext context);
+    Task Execute (WorkflowContext context);
 }
