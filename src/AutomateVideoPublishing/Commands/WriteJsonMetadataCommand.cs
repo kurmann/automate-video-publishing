@@ -36,11 +36,11 @@ public class WriteJsonMetadataCommand : ICommand, IObserver<QuickTimeMetadataCon
 
     public void OnError(Exception error) => _broadcaster.BroadcastError(error.Message);
 
-    public void OnNext(QuickTimeMetadataContainer container) => WriteJson(container.FileInfo);
+    public void OnNext(QuickTimeMetadataContainer container) => WriteJsonAsync(container.FileInfo);
 
-    public void OnNext(Mpeg4MetadataContainer container) => WriteJson(container.FileInfo);
+    public void OnNext(Mpeg4MetadataContainer container) => WriteJsonAsync(container.FileInfo);
 
-    private async Task WriteJson(FileInfo fileInfo)
+    private async Task WriteJsonAsync(FileInfo fileInfo)
     {
         var jsonResult = MediaMetadataJson.Create(fileInfo.FullName);
         if (jsonResult.IsSuccess)
