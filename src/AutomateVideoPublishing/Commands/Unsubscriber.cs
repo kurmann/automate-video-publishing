@@ -1,3 +1,5 @@
+namespace AutomateVideoPublishing.Commands;
+
 // Die Unsubscriber<T>-Klasse dient als Hilfsklasse, um die Beziehung zwischen einem 
 // Observable und einem Observer zu beenden. Sie implementiert das IDisposable-Interface, 
 // damit sie in einem using-Block oder durch Aufruf der Dispose-Methode verwendet werden kann.
