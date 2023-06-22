@@ -10,6 +10,8 @@ public class QuickTimeMetadataContainer : MediaFileInfoContainer
     /// </summary>
     public IReadOnlyDictionary<string, string?> RawMetadata { get; private set; }
 
+    public string? Description => RawMetadata.GetValueOrDefault("Description");
+
     private QuickTimeMetadataContainer(FileInfo file, MediaType mediaType, IReadOnlyDictionary<string, string?> rawMetadata)
         : base(file, mediaType) => RawMetadata = rawMetadata;
 
