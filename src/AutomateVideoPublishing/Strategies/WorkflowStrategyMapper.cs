@@ -3,7 +3,7 @@ namespace AutomateVideoPublishing.Strategies;
 public class WorkflowStrategyMapper
 {
     public const string ReadAllMetadataStrategy = nameof(ReadAllMetadataStrategy);
-    public const string TransmitMetadataStrategy = nameof(TransmitMetadataStrategy);
+    public const string VideoPublishAndArchiveStrategy = nameof(VideoPublishAndArchiveStrategy);
 
     public IWorkflowStrategy SelectedStrategy { get; private set; }
 
@@ -22,9 +22,8 @@ public class WorkflowStrategyMapper
             case ReadAllMetadataStrategy:
                 strategy = new ReadAllMetadataStrategy();
                 break;
-            case TransmitMetadataStrategy:
-                // Für dieses Beispiel gehe ich davon aus, dass TransmitMetadataStrategy einen bool zurückgibt
-                strategy = new TransmitMetadataStrategy();
+            case VideoPublishAndArchiveStrategy:
+                strategy = new VideoPublishAndArchiveStrategy();
                 break;
             default:
                 return Result.Failure<WorkflowStrategyMapper, string>($"Unknown strategy: {strategyName}");

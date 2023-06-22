@@ -4,7 +4,7 @@ using AutomateVideoPublishing.Strategies;
 
 namespace AutomateVideoPublishing.Entities
 {
-    public class TransmitMetadataStrategy : IWorkflowStrategy
+    public class VideoPublishAndArchiveStrategy : IWorkflowStrategy
     {
         private Subject<string> _broadcaster = new();
 
