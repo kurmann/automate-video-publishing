@@ -3,9 +3,9 @@ using AutomateVideoPublishing.Strategies;
 
 namespace AutomateVideoPublishing.Entities
 {
-    public class ReadAllMetadataStrategy : IWorkflowStrategy<List<FileInfo>>
+    public class ReadAllMetadataStrategy : IWorkflowStrategy
     {
-        public Result<List<FileInfo>> Execute(WorkflowContext context)
+        public Task Execute(WorkflowContext context)
         {
             var command = new CompositeMetadataReadWithJsonOutputCommand(new CompositeMetadataReadCommand());
             var commandResult = command.Execute(context);
@@ -17,10 +17,10 @@ namespace AutomateVideoPublishing.Entities
                     .Select(fileResult => fileResult.Error);
 
                 var errorMessage = "Failed to create JSON files for the following files: " + string.Join(", ", failedFiles);
-                return Result.Failure<List<FileInfo>>(errorMessage);
+                return Task.CompletedTask;
             }
 
-            return commandResult.CreatedJsonFiles.Where(fileResult => fileResult.IsSuccess).Select(file => file.Value).ToList();
+            return Task.CompletedTask;
         }
 
     }

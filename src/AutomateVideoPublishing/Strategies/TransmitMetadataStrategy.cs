@@ -2,13 +2,12 @@ using AutomateVideoPublishing.Strategies;
 
 namespace AutomateVideoPublishing.Entities;
 
-public class TransmitMetadataStrategy : IWorkflowStrategy<string>
+public class TransmitMetadataStrategy : IWorkflowStrategy
 {
-    public Result<string> Execute(WorkflowContext context)
+    public Task Execute(WorkflowContext context)
     {
         // Führen Sie hier die Übertragung der Metadaten durch.
         // Dies ist momentan ein Platzhalter und muss entsprechend Ihrem Bedarf implementiert werden.
-        Console.WriteLine("Transmitting metadata from {0} to {1}", context.QuickTimeMasterDirectory, context.PublishedMpeg4Directory);
-        return Result.Success("Placeholder");
+        return Task.CompletedTask;
     }
 }
