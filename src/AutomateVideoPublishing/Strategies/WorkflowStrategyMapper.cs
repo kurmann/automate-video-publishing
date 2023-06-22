@@ -5,9 +5,9 @@ public class WorkflowStrategyMapper
     public const string ReadAllMetadataStrategy = nameof(ReadAllMetadataStrategy);
     public const string TransmitMetadataStrategy = nameof(TransmitMetadataStrategy);
 
-    public IWorkflowStrategyHandler SelectedStrategyHandler { get; private set; }
+    public IWorkflowStrategy SelectedStrategy { get; private set; }
 
-    private WorkflowStrategyMapper(IWorkflowStrategyHandler strategyHandler) => SelectedStrategyHandler = strategyHandler;
+    private WorkflowStrategyMapper(IWorkflowStrategy strategy) => SelectedStrategy = strategy;
 
     public static Result<WorkflowStrategyMapper, string> Create(string? strategyName)
     {
@@ -16,20 +16,20 @@ public class WorkflowStrategyMapper
             strategyName = ReadAllMetadataStrategy;
         }
 
-        IWorkflowStrategyHandler strategyHandler;
+        IWorkflowStrategy strategy;
         switch (strategyName)
         {
             case ReadAllMetadataStrategy:
-                strategyHandler = new WorkflowStrategyHandler<List<FileInfo>>(new ReadAllMetadataStrategy());
+                strategy = new ReadAllMetadataStrategy();
                 break;
             case TransmitMetadataStrategy:
-                // Für dieses Beispiel werde ich davon ausgehen, dass TransmitMetadataStrategy einen bool zurückgibt
-                strategyHandler = new WorkflowStrategyHandler<string>(new TransmitMetadataStrategy());
+                // Für dieses Beispiel gehe ich davon aus, dass TransmitMetadataStrategy einen bool zurückgibt
+                strategy = new TransmitMetadataStrategy();
                 break;
             default:
                 return Result.Failure<WorkflowStrategyMapper, string>($"Unknown strategy: {strategyName}");
         }
 
-        return Result.Success<WorkflowStrategyMapper, string>(new WorkflowStrategyMapper(strategyHandler));
+        return Result.Success<WorkflowStrategyMapper, string>(new WorkflowStrategyMapper(strategy));
     }
 }
