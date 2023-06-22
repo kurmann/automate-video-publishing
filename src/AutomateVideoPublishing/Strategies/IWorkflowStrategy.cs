@@ -2,7 +2,7 @@ namespace AutomateVideoPublishing.Strategies;
 
 public interface IWorkflowStrategy
 {
-    Task Execute(WorkflowContext context);
+    Task ExecuteAsync(WorkflowContext context);
 
     EventBroadcaster<string> EventBroadcaster { get; }
 }

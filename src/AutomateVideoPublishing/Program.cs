@@ -48,7 +48,7 @@ class Program
 
         // Führe die ausgewählte Workflow-Strategie aus. Die Strategien selbst bestehen aus einer Abfolge
         // von Befehlen (Commands), deren Execute-Methode den Workflow implementiert.
-        var executionResult = strategyResult.Value.SelectedStrategy.Execute(contextResult.Value);
+        var executionResult = strategyResult.Value.SelectedStrategy.ExecuteAsync(contextResult.Value);
 
         // Log-Observer abschliessen
         // Diese Methode wird aufgerufen, um dem LogObserver zu signalisieren, dass das Observable, auf das er

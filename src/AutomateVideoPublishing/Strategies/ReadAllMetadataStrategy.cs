@@ -15,7 +15,7 @@ public class ReadAllMetadataStrategy : IWorkflowStrategy, IObserver<FileInfo>
         _writeCommand.Subscribe(this);
     }
 
-    public async Task Execute(WorkflowContext context)
+    public async Task ExecuteAsync(WorkflowContext context)
     {
         await _writeCommand.Execute(context);
         _broadcaster.BroadcastNext("ReadAllMetadataStrategy execution was successful.");

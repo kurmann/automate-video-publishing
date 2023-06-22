@@ -8,7 +8,7 @@ public class TransmitMetadataStrategy : IWorkflowStrategy
 
     public EventBroadcaster<string> EventBroadcaster => _broadcaster;
 
-    public async Task Execute(WorkflowContext context)
+    public async Task ExecuteAsync(WorkflowContext context)
     {
         // Führen Sie hier die Übertragung der Metadaten durch.
         // Dies ist momentan ein Platzhalter und muss entsprechend Ihrem Bedarf implementiert werden.
