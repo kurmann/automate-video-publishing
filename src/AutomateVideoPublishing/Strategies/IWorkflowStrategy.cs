@@ -4,5 +4,5 @@ public interface IWorkflowStrategy
 {
     Task ExecuteAsync(WorkflowContext context);
 
-    EventBroadcaster<string> EventBroadcaster { get; }
+    IObservable<string> EventBroadcaster { get; }
 }

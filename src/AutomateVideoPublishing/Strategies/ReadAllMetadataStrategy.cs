@@ -1,11 +1,14 @@
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
+
 namespace AutomateVideoPublishing.Strategies;
 
 public class ReadAllMetadataStrategy : IWorkflowStrategy, IObserver<FileInfo>
 {
-    private EventBroadcaster<string> _broadcaster = new();
+    private Subject<string> _broadcaster = new();
     private WriteJsonMetadataCommand _writeCommand;
 
-    public EventBroadcaster<string> EventBroadcaster => _broadcaster;
+    public IObservable<string> EventBroadcaster => _broadcaster.AsObservable();
 
     public ReadAllMetadataStrategy()
     {
@@ -18,13 +21,13 @@ public class ReadAllMetadataStrategy : IWorkflowStrategy, IObserver<FileInfo>
     public async Task ExecuteAsync(WorkflowContext context)
     {
         await _writeCommand.ExecuteAsync(context);
-        _broadcaster.BroadcastNext("ReadAllMetadataStrategy execution was successful.");
-        _broadcaster.BroadcastCompleted();
+        _broadcaster.OnNext("ReadAllMetadataStrategy execution was successful.");
+        _broadcaster.OnCompleted();
     }
 
     public void OnCompleted() { }
 
-    public void OnError(Exception error) => _broadcaster.BroadcastError(error.Message);
+    public void OnError(Exception error) => _broadcaster.OnError(error);
 
-    public void OnNext(FileInfo jsonFile) => _broadcaster.BroadcastNext($"New Json file created: {jsonFile.FullName}");
+    public void OnNext(FileInfo jsonFile) => _broadcaster.OnNext($"New Json file created: {jsonFile.FullName}");
 }

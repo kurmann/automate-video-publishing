@@ -40,13 +40,13 @@ public class WriteJsonMetadataCommand : ICommand, IObserver<QuickTimeMetadataCon
 
     public void OnNext(Mpeg4MetadataContainer container) => WriteJson(container.FileInfo);
 
-    private void WriteJson(FileInfo fileInfo)
+    private async Task WriteJson(FileInfo fileInfo)
     {
         var jsonResult = MediaMetadataJson.Create(fileInfo.FullName);
         if (jsonResult.IsSuccess)
         {
             var jsonFile = new FileInfo(Path.ChangeExtension(fileInfo.FullName, ".json"));
-            File.WriteAllText(jsonFile.FullName, jsonResult.Value.Json);
+            await File.WriteAllTextAsync(jsonFile.FullName, jsonResult.Value.Json);
             _broadcaster.BroadcastNext(jsonFile);
         }
         else
