@@ -1,25 +1,28 @@
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using AutomateVideoPublishing.Strategies;
+using AutomateVideoPublishing.Commands;
 
-namespace AutomateVideoPublishing.Entities
+namespace AutomateVideoPublishing.Strategies;
+
+public class VideoPublishAndArchiveStrategy : IWorkflowStrategy
 {
-    public class VideoPublishAndArchiveStrategy : IWorkflowStrategy
+    private Subject<string> _broadcaster = new();
+
+    public IObservable<string> WhenStatusUpdateAvailable => _broadcaster.AsObservable();
+
+    public void Execute(WorkflowContext context)
     {
-        private Subject<string> _broadcaster = new();
+        var metadataReadCommand = new QuickTimeMetadataReadCommand();
+        var metadataTransferCommand = new MetadataTransferCommand(metadataReadCommand);
 
-        public IObservable<string> WhenStatusUpdateAvailable => _broadcaster.AsObservable();
-
-        public void Execute(WorkflowContext context)
+        metadataTransferCommand.WhenDataAvailable.Subscribe(transferredMetadata =>
         {
-            // Führen Sie hier die Übertragung der Metadaten durch.
-            // Dies ist momentan ein Platzhalter und muss entsprechend Ihrem Bedarf implementiert werden.
+            string message = $"Metadaten übertragen für Datei: {transferredMetadata.FileName}, Beschreibung: {transferredMetadata.Description}, Jahr: {transferredMetadata.Year}.";
+            _broadcaster.OnNext(message);
+        });
 
-            // Für das Demo, lasst uns eine erfolgreiche Nachricht senden
-            _broadcaster.OnNext("TransmitMetadataStrategy execution was successful.");
+        metadataTransferCommand.Execute(context);
 
-            // und dann die Fertigstellung melden
-            _broadcaster.OnCompleted();
-        }
+        _broadcaster.OnCompleted();
     }
 }
