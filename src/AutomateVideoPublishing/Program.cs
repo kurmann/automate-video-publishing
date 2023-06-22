@@ -4,19 +4,26 @@ using NLog;
 
 class Program
 {
+    // Definiere einen Logger für die Anwendung. Die Konfiguration des Loggers erfolgt 
+    // durch die NLog-Konfigurationsdatei (nlog.config).
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
+    // Die Main-Methode ist der Einstiegspunkt der Konsolenanwendung. 
     static void Main(string[] args)
     {
+        // Erstelle ein Konfigurationsobjekt, das Umgebungsvariablen und Befehlszeilenargumente
+        // berücksichtigt.
         var configuration = new ConfigurationBuilder()
             .AddEnvironmentVariables()
             .AddCommandLine(args)
             .Build();
 
+        // Die Optionen aus der Konfiguration werden in ein Options-Objekt gebunden.
         var options = new Options();
         configuration.Bind(options);
 
-        // Gewählte Strategie instanzieren
+        // Erzeuge eine Instanz der ausgewählten Workflow-Strategie mithilfe eines Strategie-Mappers.
+        // Bei einem Fehler wird ein entsprechender Log-Eintrag erstellt und das Programm wird beendet.
         var strategyResult = WorkflowStrategyMapper.Create(options.Workflow);
         if (strategyResult.IsFailure)
         {
@@ -24,29 +31,33 @@ class Program
             return;
         }
         
-        // Abonniere die Statusnachrichten von der gewählten Strategie
+        // Erzeuge einen LogObserver und abonniere die Ereignisse der ausgewählten Workflow-Strategie.
         var logObserver = new LogObserver();
         var strategyUnsubscriber = strategyResult.Value.SelectedStrategy.EventBroadcaster.Subscribe(logObserver);
 
-        // Workflow-Kontext erstellen
+        // Erzeuge den Workflow-Kontext, der Daten enthält, die für alle Workflow-Strategien nützlich sind. 
+        // Bei einem Fehler wird ein entsprechender Log-Eintrag erstellt und das Programm wird beendet.
         var contextResult = WorkflowContext.Create(options.QuickTimeMasterDirectory, options.PublishedMpeg4Directory)
             .Tap(context => Logger.Info($"Executing workflow with quick time masterfile directory: {context.QuickTimeMasterDirectory.Directory}"))
             .Tap(context => Logger.Info($"Executing workflow with published MPEG-4 directory: {context.PublishedMpeg4Directory.Directory}"));
         if (contextResult.IsFailure)
         {
-            Logger.Error($"Error createing worfklow context: {contextResult.Error}");
+            Logger.Error($"Error creating workflow context: {contextResult.Error}");
             return;
         }
 
-        // Ausführung der Strategie
+        // Führe die ausgewählte Workflow-Strategie aus. Die Strategien selbst bestehen aus einer Abfolge
+        // von Befehlen (Commands), deren Execute-Methode den Workflow implementiert.
         var executionResult = strategyResult.Value.SelectedStrategy.Execute(contextResult.Value);
 
+        // Log-Observer abschliessen
         // Diese Methode wird aufgerufen, um dem LogObserver zu signalisieren, dass das Observable, auf das er
         // abonniert hat (in diesem Fall der EventBroadcaster der gewählten Strategie), keine weiteren Daten 
         // senden wird. Nachdem diese Methode aufgerufen wurde, sollte der LogObserver keine weiteren 
         // OnNext- oder OnError-Aufrufe von diesem Observable erwarten. 
         logObserver.OnCompleted();
 
+        // Beende die Verbindung zwischen dem LogObserver und der ausgewählten Workflow-Strategie.
         // Diese Methode wird aufgerufen, um den LogObserver effektiv von der Liste der Observer des 
         // Observables zu entfernen. Durch Aufrufen dieser Methode teilen wir dem Observable mit, dass es keine
         // weiteren Daten an den LogObserver senden soll. Diese Methode ist besonders nützlich, wenn das Observable
@@ -59,11 +70,23 @@ class Program
 }
 
 
+/// <summary>
+/// Die Options-Klasse enthält die Konfigurationsoptionen für die Ausführung der Konsolenanwendung.
+/// </summary>
 public class Options
 {
+    /// <summary>
+    /// Pfad zum Verzeichnis, in dem sich die zu bearbeitenden QuickTime-Masterdateien befinden.
+    /// </summary>
     public string? QuickTimeMasterDirectory { get; set; }
 
+    /// <summary>
+    /// Pfad zum Zielverzeichnis, in das die konvertierten MPEG-4-Dateien sich befinden.
+    /// </summary>
     public string? PublishedMpeg4Directory { get; set; }
 
+    /// <summary>
+    /// Name der zu verwendenden Workflow-Strategie.
+    /// </summary>
     public string? Workflow { get; set; }
 }
