@@ -1,4 +1,7 @@
-public interface ICommand
+namespace AutomateVideoPublishing.Commands;
+
+public interface ICommand<T>
 {
-    Task ExecuteAsync(WorkflowContext context);
+    void Execute(WorkflowContext context);
+    IObservable<T> WhenDataAvailable { get; }
 }
