@@ -2,7 +2,7 @@ public class Mpeg4DirectoryMetadataReadCommand : ICommand
 {
     private EventBroadcaster<Mpeg4MetadataContainer> broadcaster = new EventBroadcaster<Mpeg4MetadataContainer>();
 
-    public Task Execute(WorkflowContext context)
+    public Task ExecuteAsync(WorkflowContext context)
     {
         if (context == null)
         {

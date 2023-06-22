@@ -2,7 +2,7 @@ public class QuickTimeMetadataReadCommand : ICommand
 {
     private EventBroadcaster<QuickTimeMetadataContainer> broadcaster = new();
 
-    public Task Execute(WorkflowContext context)
+    public Task ExecuteAsync(WorkflowContext context)
     {
         if (context == null)
         {

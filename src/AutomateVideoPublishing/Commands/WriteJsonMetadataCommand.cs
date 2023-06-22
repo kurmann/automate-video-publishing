@@ -13,7 +13,7 @@ public class WriteJsonMetadataCommand : ICommand, IObserver<QuickTimeMetadataCon
         _broadcaster = new EventBroadcaster<FileInfo>();
     }
 
-    public async Task Execute(WorkflowContext context)
+    public async Task ExecuteAsync(WorkflowContext context)
     {
         if (context == null)
         {
@@ -24,8 +24,8 @@ public class WriteJsonMetadataCommand : ICommand, IObserver<QuickTimeMetadataCon
         _quickTimeCommand.Subscribe(this);
         _mpeg4Command.Subscribe(this);
         
-        await _quickTimeCommand.Execute(context);
-        await _mpeg4Command.Execute(context);
+        await _quickTimeCommand.ExecuteAsync(context);
+        await _mpeg4Command.ExecuteAsync(context);
         
         _broadcaster.BroadcastCompleted();
     }

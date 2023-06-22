@@ -1,4 +1,4 @@
 public interface ICommand
 {
-    Task Execute(WorkflowContext context);
+    Task ExecuteAsync(WorkflowContext context);
 }
