@@ -5,7 +5,7 @@ namespace AutomateVideoPublishing.Entities;
 public class MetadataTransferResult
 {
     public string SourceFile { get; }
-    public string TargetFile { get; }
+    public string? TargetFile { get; }
     public TransferStatus DescriptionTransferStatus { get; }
     public TransferStatus YearTransferStatus { get; }
     public Maybe<string> DescriptionTransferred { get; }
@@ -16,7 +16,7 @@ public class MetadataTransferResult
 
     private MetadataTransferResult(
         string sourceFile,
-        string targetFile,
+        string? targetFile,
         TransferStatus descriptionTransferStatus,
         TransferStatus yearTransferStatus,
         Maybe<string> descriptionTransferred,
@@ -38,7 +38,7 @@ public class MetadataTransferResult
 
     public static MetadataTransferResult Create(
         string sourceFile,
-        string targetFile,
+        string? targetFile,
         TransferStatus descriptionTransferStatus,
         TransferStatus yearTransferStatus,
         Maybe<string> descriptionTransferred,
@@ -57,6 +57,20 @@ public class MetadataTransferResult
             isDescriptionTransferred,
             isYearTransferred,
             isFoundPair);
+    }
+
+    public static MetadataTransferResult CreatePairNotFound(string sourceFile)
+    {
+        return new MetadataTransferResult(
+            sourceFile: sourceFile,
+            targetFile: null,
+            descriptionTransferStatus: TransferStatus.NotRequired,
+            yearTransferStatus: TransferStatus.NotRequired,
+            descriptionTransferred: Maybe<string>.None,
+            yearTransferred: Maybe<uint>.None,
+            isDescriptionTransferred: false,
+            isYearTransferred: false,
+            isFoundPair: false);
     }
 
     public enum TransferStatus
