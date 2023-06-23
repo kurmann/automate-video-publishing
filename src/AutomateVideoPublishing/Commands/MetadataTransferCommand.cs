@@ -1,6 +1,5 @@
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using System.Text;
 
 namespace AutomateVideoPublishing.Commands;
 
@@ -23,11 +22,7 @@ public class MetadataTransferCommand : ICommand<MetadataTransferResult>
 
                 if (pairResult.IsFailure)
                 {
-                    _broadcaster.OnNext(new MetadataTransferResult
-                    {
-                        SourceFile = container.FileInfo.FullName,
-                        IsFoundPair = false
-                    });
+                    _broadcaster.OnNext(MetadataTransferResult.CreatePairNotFound(container.FileInfo.FullName));
                     return null;
                 }
 
@@ -36,7 +31,7 @@ public class MetadataTransferCommand : ICommand<MetadataTransferResult>
             .Where(pair => pair != null)
             .Subscribe(pair =>
             {
-                var result = TransferMetadata(pair);
+                var result = TransferMetadata(pair!);
                 _broadcaster.OnNext(result);
             });
 
@@ -49,104 +44,52 @@ public class MetadataTransferCommand : ICommand<MetadataTransferResult>
         var quickTimeMetadataContainer = pair.QuickTimeMetadataContainer;
         var mpeg4 = pair.Mpeg4MetadataContainer;
 
-        bool descriptionTransferred = false;
-        bool yearTransferred = false;
-
         var mpeg4TagLibFile = TagLib.File.Create(mpeg4.FileInfo.FullName);
 
         // Check if metadata is different in target file
-        if (!pair.IsDescriptionSame && quickTimeMetadataContainer.Description.HasValue)
+        var descriptionTransferred = !pair.IsDescriptionSame && quickTimeMetadataContainer.Description.HasValue
+            ? quickTimeMetadataContainer.Description.Value
+            : null;
+
+        var yearTransferred = !pair.IsYearSame && quickTimeMetadataContainer.YearByFilename.HasValue
+            ? quickTimeMetadataContainer.YearByFilename.Value
+            : (uint?)null;
+
+        bool isDescriptionTransferred = descriptionTransferred != null;
+        bool isYearTransferred = yearTransferred.HasValue;
+
+        if (descriptionTransferred != null)
         {
-            mpeg4TagLibFile.Tag.Description = quickTimeMetadataContainer.Description.Value;
-            descriptionTransferred = true;
+            mpeg4TagLibFile.Tag.Description = descriptionTransferred;
         }
 
-        if (!pair.IsYearSame && quickTimeMetadataContainer.YearByFilename.HasValue)
+        if (yearTransferred.HasValue)
         {
-            mpeg4TagLibFile.Tag.Year = quickTimeMetadataContainer.YearByFilename.Value;
-            yearTransferred = true;
+            mpeg4TagLibFile.Tag.Year = yearTransferred.Value;
         }
 
         mpeg4TagLibFile.Save();
 
-        return new MetadataTransferResult
-        {
-            SourceFile = quickTimeMetadataContainer.FileInfo.FullName,
-            TargetFile = mpeg4.FileInfo.FullName,
-            DescriptionTransferred = quickTimeMetadataContainer.Description.GetValueOrDefault(),
-            YearTransferred = quickTimeMetadataContainer.YearByFilename.GetValueOrDefault(),
-            IsDescriptionTransferred = descriptionTransferred,
-            IsYearTransferred = yearTransferred,
-            IsFoundPair = true,
-            DescriptionHasToBeTransferred = !pair.IsDescriptionSame,
-            YearHasToBeTransferred = !pair.IsYearSame,
-        };
-    }
-}
-
-
-public record MetadataTransferResult
-{
-    public string? SourceFile { get; init; }
-    public string? TargetFile { get; init; }
-    public TransferStatus DescriptionTransferStatus { get; init; }
-    public TransferStatus YearTransferStatus { get; init; }
-
-    public bool DescriptionHasToBeTransferred { get; set; }
-    public bool YearHasToBeTransferred { get; set; }
-    public string? DescriptionTransferred { get; init; }
-    public uint? YearTransferred { get; init; }
-    public bool IsDescriptionTransferred { get; set; }
-    public bool IsYearTransferred { get; set; }
-    public bool IsFoundPair { get; set; }
-    public string? DescriptionError { get; init; }
-    public string? YearError { get; init; }
-
-    public string SummaryMessage
-    {
-        get
-        {
-            var messageBuilder = new StringBuilder();
-            messageBuilder.Append($"Metadata transfer for file: {SourceFile}.");
-
-            messageBuilder.Append(IsFoundPair
-                ? " Pair found."
-                : " No Pair not found for QuickTime and MPEG-4 file with the same name to transfer metadata to.");
-
-            if (DescriptionHasToBeTransferred)
-            {
-                messageBuilder.Append(IsDescriptionTransferred
-                    ? $" Description transferred: {DescriptionTransferred}."
-                    : " Description transfer failed or not needed.");
-            }
-            else
-            {
-                messageBuilder.Append(" Description transfer not intended.");
-            }
-
-            if (YearHasToBeTransferred)
-            {
-                messageBuilder.Append(IsYearTransferred
-                    ? $" Year transferred: {YearTransferred}."
-                    : " Year transfer failed or not needed.");
-            }
-            else
-            {
-                messageBuilder.Append(" Year transfer not intended.");
-            }
-
-            return messageBuilder.ToString();
-        }
+        return MetadataTransferResult.Create(
+            sourceFile: quickTimeMetadataContainer.FileInfo.FullName,
+            targetFile: mpeg4.FileInfo.FullName,
+            descriptionTransferStatus: isDescriptionTransferred
+                ? MetadataTransferResult.TransferStatus.Success
+                : MetadataTransferResult.TransferStatus.NotRequired,
+            yearTransferStatus: isYearTransferred
+                ? MetadataTransferResult.TransferStatus.Success
+                : MetadataTransferResult.TransferStatus.NotRequired,
+            descriptionTransferred: descriptionTransferred != null ? Maybe.From(descriptionTransferred) : Maybe<string>.None,
+            yearTransferred: yearTransferred.HasValue && yearTransferred.HasValue
+                ? Maybe.From(yearTransferred.Value)
+                : Maybe<uint>.None,
+            isDescriptionTransferred: isDescriptionTransferred,
+            isYearTransferred: isYearTransferred,
+            isFoundPair: true
+        );
     }
 
-    public enum TransferStatus
-    {
-        NotSpecified,
-        NotRequired,
-        Success,
-        Failed
-    }
+
 
 
 }
-
