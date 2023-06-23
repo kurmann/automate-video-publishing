@@ -1,9 +1,3 @@
-using CSharpFunctionalExtensions;
-using System;
-using System.IO;
-using System.Linq;
-using AutomateVideoPublishing.Entities;
-
 namespace AutomateVideoPublishing.Commands
 {
     public class QuickTimeMpeg4Pair

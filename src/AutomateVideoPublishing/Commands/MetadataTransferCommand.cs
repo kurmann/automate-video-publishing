@@ -47,59 +47,54 @@ public class MetadataTransferCommand : ICommand<MetadataTransferResult>
         _broadcaster.OnCompleted();
     }
 
-    private MetadataTransferResult? TransferMetadata(QuickTimeMpeg4Pair? pair)
+    private MetadataTransferResult TransferMetadata(QuickTimeMpeg4Pair pair)
     {
-        if (pair == null)
-        {
-            throw new ArgumentNullException(nameof(pair));
-        }
-
         var quickTimeMetadataContainer = pair.Source;
         var mpeg4 = pair.Target;
+
+        var descriptionToBeTransferred = quickTimeMetadataContainer.Description;
         var descriptionTransferred = false;
+
+        // Extract year from filename
+        var filename = Path.GetFileNameWithoutExtension(quickTimeMetadataContainer.FileInfo.Name);
+        var yearSubstring = filename.Substring(0, 4);
+        var yearToBeTransferred = uint.TryParse(yearSubstring, out var year)
+            ? year.ToString()
+            : null;
         var yearTransferred = false;
-        var isFoundPair = false;
 
-        try
+        var mpeg4TagLibFile = TagLib.File.Create(mpeg4.FileInfo.FullName);
+
+        // Check if metadata is different in target file
+        if (descriptionToBeTransferred != null && mpeg4TagLibFile.Tag.Description != descriptionToBeTransferred)
         {
-            var mpeg4TagLibFile = TagLib.File.Create(pair.Target.FileInfo.FullName);
-
-            var descriptionOrDefault = quickTimeMetadataContainer.Description;
-            if (!string.IsNullOrWhiteSpace(descriptionOrDefault))
-            {
-                mpeg4TagLibFile.Tag.Description = descriptionOrDefault;
-                descriptionTransferred = true;
-            }
-
-            // Attempt to extract year from filename
-            var filename = Path.GetFileNameWithoutExtension(quickTimeMetadataContainer.FileInfo.Name);
-            var yearSubstring = filename.Substring(0, 4);
-            if (uint.TryParse(yearSubstring, out var year))
-            {
-                mpeg4TagLibFile.Tag.Year = year;
-                yearTransferred = true;
-            }
-
-            isFoundPair = true;
-            mpeg4TagLibFile.Save();
-
-            return new MetadataTransferResult
-            {
-                SourceFile = quickTimeMetadataContainer.FileInfo.FullName,
-                TargetFile = mpeg4.FileInfo.FullName,
-                DescriptionTransferred = descriptionOrDefault,
-                YearTransferred = year.ToString(),
-                IsDescriptionTransferred = descriptionTransferred,
-                IsYearTransferred = yearTransferred,
-                IsFoundPair = isFoundPair
-            };
+            mpeg4TagLibFile.Tag.Description = descriptionToBeTransferred;
+            descriptionTransferred = true;
         }
-        catch (Exception ex)
+
+        if (yearToBeTransferred != null && mpeg4TagLibFile.Tag.Year.ToString() != yearToBeTransferred)
         {
-            _broadcaster.OnError(ex);
-            return null;
+            mpeg4TagLibFile.Tag.Year = uint.Parse(yearToBeTransferred);
+            yearTransferred = true;
         }
+
+        mpeg4TagLibFile.Save();
+
+        return new MetadataTransferResult
+        {
+            SourceFile = quickTimeMetadataContainer.FileInfo.FullName,
+            TargetFile = mpeg4.FileInfo.FullName,
+            DescriptionTransferred = descriptionToBeTransferred,
+            YearTransferred = yearToBeTransferred,
+            IsDescriptionTransferred = descriptionTransferred,
+            IsYearTransferred = yearTransferred,
+            IsFoundPair = true,
+            DescriptionHasToBeTransferred = descriptionToBeTransferred != null,
+            YearHasToBeTransferred = yearToBeTransferred != null,
+        };
     }
+
+
 
 }
 
@@ -107,11 +102,18 @@ public record MetadataTransferResult
 {
     public string? SourceFile { get; init; }
     public string? TargetFile { get; init; }
+    public TransferStatus DescriptionTransferStatus { get; init; }
+    public TransferStatus YearTransferStatus { get; init; }
+
+    public bool DescriptionHasToBeTransferred { get; set; }
+    public bool YearHasToBeTransferred { get; set; }
     public string? DescriptionTransferred { get; init; }
     public string? YearTransferred { get; init; }
-    public bool IsDescriptionTransferred { get; init; }
-    public bool IsYearTransferred { get; init; }
-    public bool IsFoundPair { get; init; }
+    public bool IsDescriptionTransferred { get; set; }
+    public bool IsYearTransferred { get; set; }
+    public bool IsFoundPair { get; set; }
+    public string? DescriptionError { get; init; }
+    public string? YearError { get; init; }
 
     public string SummaryMessage
     {
@@ -120,20 +122,42 @@ public record MetadataTransferResult
             var messageBuilder = new StringBuilder();
             messageBuilder.Append($"Metadata transfer for file: {SourceFile}.");
 
-            messageBuilder.Append(IsFoundPair 
-                ? " Pair found." 
+            messageBuilder.Append(IsFoundPair
+                ? " Pair found."
                 : " No Pair not found for QuickTime and MPEG-4 file with the same name to transfer metadata to.");
 
-            messageBuilder.Append(IsDescriptionTransferred 
-                ? $" Description: {DescriptionTransferred}." 
-                : " Description not transferred.");
+            if (DescriptionHasToBeTransferred)
+            {
+                messageBuilder.Append(IsDescriptionTransferred
+                    ? $" Description transferred: {DescriptionTransferred}."
+                    : " Description transfer failed or not needed.");
+            }
+            else
+            {
+                messageBuilder.Append(" Description transfer not intended.");
+            }
 
-            messageBuilder.Append(IsYearTransferred 
-                ? $" Year: {YearTransferred}." 
-                : " Year not transferred.");
+            if (YearHasToBeTransferred)
+            {
+                messageBuilder.Append(IsYearTransferred
+                    ? $" Year transferred: {YearTransferred}."
+                    : " Year transfer failed or not needed.");
+            }
+            else
+            {
+                messageBuilder.Append(" Year transfer not intended.");
+            }
 
             return messageBuilder.ToString();
         }
+    }
+
+    public enum TransferStatus
+    {
+        NotSpecified,
+        NotRequired,
+        Success,
+        Failed
     }
 
 
