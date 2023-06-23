@@ -19,7 +19,7 @@ public class MetadataTransferCommand : ICommand<MetadataTransferResult>
             .Select(container =>
             {
                 var targetDirectoryPath = context.PublishedMpeg4Directory.Directory.FullName;
-                var pairResult = QuickTimeMpeg4Pair.Create(container.FileInfo.FullName, targetDirectoryPath);
+                var pairResult = QuickTimeMpeg4MetadataPair.Create(container.FileInfo.FullName, targetDirectoryPath);
 
                 if (pairResult.IsFailure)
                 {
@@ -37,44 +37,33 @@ public class MetadataTransferCommand : ICommand<MetadataTransferResult>
             .Subscribe(pair =>
             {
                 var result = TransferMetadata(pair);
-                if (result != null)
-                {
-                    _broadcaster.OnNext(result);
-                }
+                _broadcaster.OnNext(result);
             });
 
         _quickTimeCommand.Execute(context);
         _broadcaster.OnCompleted();
     }
 
-    private MetadataTransferResult TransferMetadata(QuickTimeMpeg4Pair pair)
+    private MetadataTransferResult TransferMetadata(QuickTimeMpeg4MetadataPair pair)
     {
-        var quickTimeMetadataContainer = pair.Source;
-        var mpeg4 = pair.Target;
+        var quickTimeMetadataContainer = pair.QuickTimeMetadataContainer;
+        var mpeg4 = pair.Mpeg4MetadataContainer;
 
-        var descriptionToBeTransferred = quickTimeMetadataContainer.Description;
-        var descriptionTransferred = false;
-
-        // Extract year from filename
-        var filename = Path.GetFileNameWithoutExtension(quickTimeMetadataContainer.FileInfo.Name);
-        var yearSubstring = filename.Substring(0, 4);
-        var yearToBeTransferred = uint.TryParse(yearSubstring, out var year)
-            ? year.ToString()
-            : null;
-        var yearTransferred = false;
+        bool descriptionTransferred = false;
+        bool yearTransferred = false;
 
         var mpeg4TagLibFile = TagLib.File.Create(mpeg4.FileInfo.FullName);
 
         // Check if metadata is different in target file
-        if (descriptionToBeTransferred != null && mpeg4TagLibFile.Tag.Description != descriptionToBeTransferred)
+        if (!pair.IsDescriptionSame && quickTimeMetadataContainer.Description.HasValue)
         {
-            mpeg4TagLibFile.Tag.Description = descriptionToBeTransferred;
+            mpeg4TagLibFile.Tag.Description = quickTimeMetadataContainer.Description.Value;
             descriptionTransferred = true;
         }
 
-        if (yearToBeTransferred != null && mpeg4TagLibFile.Tag.Year.ToString() != yearToBeTransferred)
+        if (!pair.IsYearSame && quickTimeMetadataContainer.YearByFilename.HasValue)
         {
-            mpeg4TagLibFile.Tag.Year = uint.Parse(yearToBeTransferred);
+            mpeg4TagLibFile.Tag.Year = quickTimeMetadataContainer.YearByFilename.Value;
             yearTransferred = true;
         }
 
@@ -84,19 +73,17 @@ public class MetadataTransferCommand : ICommand<MetadataTransferResult>
         {
             SourceFile = quickTimeMetadataContainer.FileInfo.FullName,
             TargetFile = mpeg4.FileInfo.FullName,
-            DescriptionTransferred = descriptionToBeTransferred,
-            YearTransferred = yearToBeTransferred,
+            DescriptionTransferred = quickTimeMetadataContainer.Description.GetValueOrDefault(),
+            YearTransferred = quickTimeMetadataContainer.YearByFilename.GetValueOrDefault(),
             IsDescriptionTransferred = descriptionTransferred,
             IsYearTransferred = yearTransferred,
             IsFoundPair = true,
-            DescriptionHasToBeTransferred = descriptionToBeTransferred != null,
-            YearHasToBeTransferred = yearToBeTransferred != null,
+            DescriptionHasToBeTransferred = !pair.IsDescriptionSame,
+            YearHasToBeTransferred = !pair.IsYearSame,
         };
     }
-
-
-
 }
+
 
 public record MetadataTransferResult
 {
@@ -108,7 +95,7 @@ public record MetadataTransferResult
     public bool DescriptionHasToBeTransferred { get; set; }
     public bool YearHasToBeTransferred { get; set; }
     public string? DescriptionTransferred { get; init; }
-    public string? YearTransferred { get; init; }
+    public uint? YearTransferred { get; init; }
     public bool IsDescriptionTransferred { get; set; }
     public bool IsYearTransferred { get; set; }
     public bool IsFoundPair { get; set; }
