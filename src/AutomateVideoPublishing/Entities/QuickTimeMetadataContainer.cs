@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using MetadataExtractor;
 using MetadataExtractor.Formats.QuickTime;
 
@@ -10,7 +11,34 @@ public class QuickTimeMetadataContainer : MediaFileInfoContainer
     /// </summary>
     public IReadOnlyDictionary<string, string?> RawMetadata { get; private set; }
 
-    public string? Description => RawMetadata.GetValueOrDefault("Description");
+    public Maybe<string> Description
+    {
+        get
+        {
+            if (RawMetadata.TryGetValue("Description", out var description) && !string.IsNullOrWhiteSpace(description))
+            {
+                return Maybe<string>.From(description);
+            }
+
+            return Maybe<string>.None;
+        }
+    }
+
+    public Maybe<uint> YearByFilename
+    {
+        get
+        {
+            var regex = new Regex(@"\b(?<year>\d{4})\b");
+            var match = regex.Match(FileInfo.Name);
+
+            if (match.Success && uint.TryParse(match.Groups["year"].Value, out var year))
+            {
+                return Maybe<uint>.From(year);
+            }
+
+            return Maybe<uint>.None;
+        }
+    }
 
     private QuickTimeMetadataContainer(FileInfo file, MediaType mediaType, IReadOnlyDictionary<string, string?> rawMetadata)
         : base(file, mediaType) => RawMetadata = rawMetadata;
