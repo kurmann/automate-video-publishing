@@ -12,6 +12,32 @@ public class Mpeg4MetadataContainer : MediaFileInfoContainer
         Tags = tags;
     }
 
+    public Maybe<string> Description
+    {
+        get
+        {
+            if (!string.IsNullOrWhiteSpace(Tags.Description))
+            {
+                return Maybe<string>.From(Tags.Description);
+            }
+
+            return Maybe<string>.None;
+        }
+    }
+
+    public Maybe<uint> Year
+    {
+        get
+        {
+            if (Tags.Year > 0)
+            {
+                return Maybe<uint>.From((uint)Tags.Year);
+            }
+
+            return Maybe<uint>.None;
+        }
+    }
+
     private static Result<TagLib.Tag> TryGetMetadata(FileInfo file)
     {
         try
