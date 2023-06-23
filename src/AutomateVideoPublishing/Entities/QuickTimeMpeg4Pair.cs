@@ -11,7 +11,7 @@ namespace AutomateVideoPublishing.Entities
             Target = target;
         }
 
-        public static Result<QuickTimeMpeg4Pair> Create(string sourceFilePath, string targetDirectoryPath)
+        public static Result<QuickTimeMpeg4Pair> Create(string sourceFilePath, string? targetDirectoryPath)
         {
             var sourceResult = QuickTimeMetadataContainer.Create(sourceFilePath);
             if (sourceResult.IsFailure)

@@ -41,7 +41,7 @@ public class QuickTimeMpeg4MetadataPair
 
     private QuickTimeMpeg4MetadataPair(QuickTimeMpeg4Pair pair) => _pair = pair;
 
-    public static Result<QuickTimeMpeg4MetadataPair> Create(string sourceFilePath, string targetDirectoryPath)
+    public static Result<QuickTimeMpeg4MetadataPair> Create(string sourceFilePath, string? targetDirectoryPath)
     {
         var pairResult = QuickTimeMpeg4Pair.Create(sourceFilePath, targetDirectoryPath);
 
