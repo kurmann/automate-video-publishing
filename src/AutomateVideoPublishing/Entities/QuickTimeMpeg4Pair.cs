@@ -1,4 +1,4 @@
-namespace AutomateVideoPublishing.Commands
+namespace AutomateVideoPublishing.Entities
 {
     public class QuickTimeMpeg4Pair
     {
