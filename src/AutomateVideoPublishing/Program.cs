@@ -37,7 +37,9 @@ class Program
 
         // Erzeuge den Workflow-Kontext, der Daten enthält, die für alle Workflow-Strategien nützlich sind. 
         // Bei einem Fehler wird ein entsprechender Log-Eintrag erstellt und das Programm wird beendet.
-        var contextResult = WorkflowContext.Create(options.QuickTimeMasterDirectory, options.PublishedMpeg4Directory)
+        var contextResult = WorkflowContext.Create(options.QuickTimeMasterDirectory,
+                                                   options.PublishedMpeg4Directory,
+                                                   options.PublishedMediaLocalDirectory)
             .Tap(context => Logger.Info($"Executing workflow with quick time masterfile directory: {context.QuickTimeMasterDirectory.Directory}"))
             .Tap(context => Logger.Info($"Executing workflow with published MPEG-4 directory: {context.PublishedMpeg4Directory.Directory}"));
         if (contextResult.IsFailure)
