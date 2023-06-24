@@ -46,6 +46,7 @@ public class WorkflowContext
         // set values or default
         quickTimeMasterDirectoryPath = string.IsNullOrWhiteSpace(quickTimeMasterDirectoryPath) ? DefaultDirectory : quickTimeMasterDirectoryPath;
         publishedMpeg4DirectoryPath = string.IsNullOrWhiteSpace(publishedMpeg4DirectoryPath) ? DefaultDirectory : publishedMpeg4DirectoryPath;
+        publishedMediaLocalDirectoryPath = string.IsNullOrWhiteSpace(publishedMediaLocalDirectoryPath) ? Path.Combine(DefaultDirectory, "Published") :publishedMediaLocalDirectoryPath;
 
         var quickTimeMasterDirectoryResult = ValidQuickTimeMasterDirectory.Create(quickTimeMasterDirectoryPath);
 

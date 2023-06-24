@@ -1,3 +1,5 @@
+namespace AutomateVideoPublishing.Entities;
+
 /// <summary>
 /// Repräsentiert ein gültiges MPEG-4 Verzeichnis.
 /// Diese Klasse stellt sicher, dass das angegebene Verzeichnis existiert und enthält eine Sammlung von MPEG-4 Dateien (.mp4 oder .m4v) innerhalb dieses Verzeichnisses.

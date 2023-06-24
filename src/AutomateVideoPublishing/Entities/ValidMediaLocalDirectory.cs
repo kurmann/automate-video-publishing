@@ -16,11 +16,11 @@ public class ValidMediaLocalDirectory
     /// </summary>
     /// <param name="path">Der Pfad, aus dem die ValidMediaLocalDirectory erstellt werden soll.</param>
     /// <returns>Eine Result-Instanz, die entweder eine ValidMediaLocalDirectory-Instanz oder eine Fehlermeldung enthält.</returns>
-    public static Result<ValidMediaLocalDirectory> Create(string path)
+    public static Result<ValidMediaLocalDirectory> Create(string? path)
     {
         if (string.IsNullOrWhiteSpace(path))
         {
-            return Result.Failure<ValidMediaLocalDirectory>("Directory path cannot be null or empty.");
+            return Result.Failure<ValidMediaLocalDirectory>("Directory path of published local media cannot be null or empty.");
         }
 
         var directoryInfo = new DirectoryInfo(path);

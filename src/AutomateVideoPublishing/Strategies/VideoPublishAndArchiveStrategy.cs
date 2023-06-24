@@ -2,37 +2,53 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using AutomateVideoPublishing.Commands;
 
-namespace AutomateVideoPublishing.Strategies
+namespace AutomateVideoPublishing.Strategies;
+
+public class VideoPublishAndArchiveStrategy : IWorkflowStrategy
 {
-    public class VideoPublishAndArchiveStrategy : IWorkflowStrategy
+    private Subject<string> _broadcaster = new();
+
+    public IObservable<string> WhenStatusUpdateAvailable => _broadcaster.AsObservable();
+
+    public void Execute(WorkflowContext context)
     {
-        private Subject<string> _broadcaster = new();
+        var metadataReadCommand = new QuickTimeMetadataReadCommand();
+        var metadataTransferCommand = new MetadataTransferCommand(metadataReadCommand);
+        var moveToMediaLocalDirectoryCommand = new MoveToMediaLocalDirectoryCommand();
 
-        public IObservable<string> WhenStatusUpdateAvailable => _broadcaster.AsObservable();
-
-        public void Execute(WorkflowContext context)
-        {
-            var metadataReadCommand = new QuickTimeMetadataReadCommand();
-            var metadataTransferCommand = new MetadataTransferCommand(metadataReadCommand);
-
-            metadataTransferCommand.WhenDataAvailable.Subscribe(
-                transferredMetadata =>
+        metadataTransferCommand.WhenDataAvailable.Subscribe(
+            transferredMetadata =>
+            {
+                if (transferredMetadata != null)
                 {
-                    if (transferredMetadata != null)
-                    {
-                        _broadcaster.OnNext(transferredMetadata.SummaryMessage);
-                    }
-                },
-                exception =>
-                {
-                    // Handle any error
-                    _broadcaster.OnError(exception);
+                    _broadcaster.OnNext(transferredMetadata.SummaryMessage);
+                    // Nachdem die Metadaten übertragen wurden, führen Sie den Befehl zum Verschieben in das lokale Verzeichnis aus
+                    moveToMediaLocalDirectoryCommand.Execute(context);
                 }
-            );
+            },
+            exception =>
+            {
+                // Handle any error
+                _broadcaster.OnError(exception);
+            }
+        );
 
-            metadataTransferCommand.Execute(context);
+        moveToMediaLocalDirectoryCommand.WhenDataAvailable.Subscribe(
+            result =>
+            {
+                // Verarbeiten Sie das Ergebnis des moveToMediaLocalDirectoryCommand hier
+                // Zum Beispiel könnten Sie eine Nachricht an den _broadcaster senden
+                _broadcaster.OnNext($"Move to local directory result: {result}");
+            },
+            exception =>
+            {
+                // Handle any error
+                _broadcaster.OnError(exception);
+            }
+        );
 
-            _broadcaster.OnCompleted();
-        }
+        metadataTransferCommand.Execute(context);
+
+        _broadcaster.OnCompleted();
     }
 }
