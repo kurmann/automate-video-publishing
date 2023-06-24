@@ -2,7 +2,7 @@ using System.Text.RegularExpressions;
 using MetadataExtractor;
 using MetadataExtractor.Formats.QuickTime;
 
-namespace AutomateVideoPublishing.Entities;
+namespace AutomateVideoPublishing.Entities.Metadata;
 
 public class QuickTimeMetadataContainer : MediaFileInfoContainer
 {

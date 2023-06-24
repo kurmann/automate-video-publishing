@@ -1,4 +1,4 @@
-namespace AutomateVideoPublishing.Entities;
+namespace AutomateVideoPublishing.Entities.Metadata;
 
 /// <summary>
 /// Verwaltet die Metadaten einer Medien-Datei im JSON-Format.

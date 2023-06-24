@@ -1,4 +1,4 @@
-namespace AutomateVideoPublishing.Entities;
+namespace AutomateVideoPublishing.Entities.Metadata;
 
 public class Mpeg4MetadataContainer : MediaFileInfoContainer
 {

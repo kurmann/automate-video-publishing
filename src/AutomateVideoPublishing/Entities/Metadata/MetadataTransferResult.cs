@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace AutomateVideoPublishing.Entities;
+namespace AutomateVideoPublishing.Entities.Metadata;
 
 public class MetadataTransferResult
 {

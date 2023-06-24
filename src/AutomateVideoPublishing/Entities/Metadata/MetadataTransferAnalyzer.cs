@@ -1,3 +1,5 @@
+namespace AutomateVideoPublishing.Entities.Metadata;
+
 public class MetadataTransferAnalyzer
 {
     private QuickTimeMpeg4MetadataPair _beforeTransfer;
