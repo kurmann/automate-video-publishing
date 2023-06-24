@@ -1,6 +1,6 @@
 namespace AutomateVideoPublishing.Entities.Elementary;
 
-public class PositiveInteger
+public class PositiveInteger : ValueObject, IComparable<PositiveInteger>
 {
     public int Value { get; }
 
@@ -19,4 +19,15 @@ public class PositiveInteger
     public static PositiveInteger Default => new PositiveInteger(1);
 
     public static implicit operator int(PositiveInteger positiveInteger) => positiveInteger.Value;
+
+    protected override IEnumerable<IComparable> GetEqualityComponents()
+    {
+        yield return Value;
+    }
+
+    public int CompareTo(PositiveInteger? other)
+    {
+        if (other == null) return 1; // all instances are greater than null
+        return Value.CompareTo(other.Value);
+    }
 }
