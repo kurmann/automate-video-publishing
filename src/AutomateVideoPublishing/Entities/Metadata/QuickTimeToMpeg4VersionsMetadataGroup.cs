@@ -11,13 +11,20 @@ public class QuickTimeToMpeg4VersionsMetadataGroup
         Mpeg4MetadataContainers = mpeg4MetadataContainers;
     }
 
-    public static Result<QuickTimeToMpeg4VersionsMetadataGroup> Create(string quickTimeFilePath, DirectoryInfo targetDirectory)
+    public static Result<QuickTimeToMpeg4VersionsMetadataGroup> Create(string quickTimeFilePath, string targetDirectoryPath)
     {
         var quickTimeContainerResult = QuickTimeMetadataContainer.Create(quickTimeFilePath);
 
         if (quickTimeContainerResult.IsFailure)
         {
             return Result.Failure<QuickTimeToMpeg4VersionsMetadataGroup>(quickTimeContainerResult.Error);
+        }
+
+        var validMpeg4DirectoryResult = ValidMpeg4Directory.Create(targetDirectoryPath);
+
+        if (validMpeg4DirectoryResult.IsFailure)
+        {
+            return Result.Failure<QuickTimeToMpeg4VersionsMetadataGroup>(validMpeg4DirectoryResult.Error);
         }
 
         var quickTimeFileInfo = new FileInfo(quickTimeFilePath);
@@ -27,9 +34,8 @@ public class QuickTimeToMpeg4VersionsMetadataGroup
         var mpeg4MetadataContainers = new List<Mpeg4MetadataContainer>();
 
         // Look for all mpeg4 files in the target directory that start with the same date and name.
-        var mpeg4Files = targetDirectory.GetFiles($"{dateAndName}*.m4v")
-                            .Concat(targetDirectory.GetFiles($"{dateAndName}*.mp4"))
-                            .Concat(targetDirectory.GetFiles($"{dateAndName}*.mv4"));
+        var mpeg4Files = validMpeg4DirectoryResult.Value.Mpeg4Files
+                            .Where(f => f.Name.StartsWith($"{dateAndName}", StringComparison.InvariantCultureIgnoreCase));
 
         foreach (var mpeg4File in mpeg4Files)
         {
@@ -50,6 +56,7 @@ public class QuickTimeToMpeg4VersionsMetadataGroup
 
         return Result.Success(new QuickTimeToMpeg4VersionsMetadataGroup(quickTimeContainerResult.Value, mpeg4MetadataContainers));
     }
+
 
 
     // Methoden zum Überprüfen und Anwenden von Metadatenänderungen können hier eingefügt werden.
