@@ -52,11 +52,18 @@ public class ValidTvShowBasedLocalDirectory
         var seasonDirectoryPath = Path.Combine(directoryInfo.FullName, $"Season {currentSeasonNumber}");
         var seasonDirectory = new DirectoryInfo(seasonDirectoryPath);
 
-        if (seasonDirectory.Exists && seasonDirectory.GetFiles().Length > 24)
+        // Check if directory exists before getting files.
+        if (!seasonDirectory.Exists)
+        {
+            return PositiveInteger.Create(1).Value; // return default value
+        }
+
+        if (seasonDirectory.GetFiles().Length > 24)
         {
             return PositiveInteger.Create(1).Value;
         }
 
         return PositiveInteger.Create(seasonDirectory.GetFiles().Length + 1).Value;
     }
+
 }
