@@ -1,3 +1,5 @@
+namespace AutomateVideoPublishing.Entities;
+
 /// <summary>
 /// Repräsentiert ein gültiges QuickTime-Master-Verzeichnis.
 /// Diese Klasse stellt sicher, dass das angegebene Verzeichnis existiert und enthält eine Sammlung von QuickTime-Dateien (.mov) innerhalb dieses Verzeichnisses.
