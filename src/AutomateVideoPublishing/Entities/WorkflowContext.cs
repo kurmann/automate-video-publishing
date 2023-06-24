@@ -1,3 +1,5 @@
+namespace AutomateVideoPublishing.Entities;
+
 public class WorkflowContext
 {
     /// <summary>
