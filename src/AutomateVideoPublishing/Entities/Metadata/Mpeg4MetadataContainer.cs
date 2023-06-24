@@ -38,6 +38,19 @@ public class Mpeg4MetadataContainer : MediaFileInfoContainer
         }
     }
 
+    public Maybe<string> Album
+    {
+        get
+        {
+            if (!string.IsNullOrWhiteSpace(Tags.Album))
+            {
+                return Maybe<string>.From(Tags.Album);
+            }
+
+            return Maybe<string>.None;
+        }
+    }
+
     private static Result<TagLib.Tag> TryGetMetadata(FileInfo file)
     {
         try
