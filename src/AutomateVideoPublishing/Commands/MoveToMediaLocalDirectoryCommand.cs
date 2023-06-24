@@ -3,16 +3,25 @@ using System.Reactive.Subjects;
 
 namespace AutomateVideoPublishing.Commands;
 
-public class MoveToMediaLocalDirectoryCommand : ICommand<string> // ICommand<T> sollte das erwartete Ergebnis Ihrer Operation repräsentieren. 
-                                                                 // Ich verwende string als Platzhalter
+public class MoveToMediaLocalDirectoryCommand : ICommand<FileInfo>
 {
-    private readonly Subject<string> _broadcaster = new();
+    private readonly Subject<FileInfo> _broadcaster = new();
 
-    public IObservable<string> WhenDataAvailable => _broadcaster.AsObservable();
+    /// <summary>
+    /// Präfix für Staffelverzeichnisse
+    /// </summary>
+    public static readonly string SeasonPrefix = "Staffel ";
+
+    /// <summary>
+    /// Standard Album-Verzeichnis
+    /// </summary>
+    public static readonly string DefaultAlbum = "TV Shows";
+
+    public IObservable<FileInfo> WhenDataAvailable => _broadcaster.AsObservable();
 
     public void Execute(WorkflowContext context)
     {
-        // Erstellt das PublishedMediaLocalDirectory anhand des Workflow-Kontexts
+        // Erzeugen eines gültigen lokalen Medienverzeichnisses basierend auf dem Kontext
         var publishedMediaLocalDirectoryResult = ValidMediaLocalDirectory.Create(context.PublishedMediaLocalDirectory.FullPath);
         if (publishedMediaLocalDirectoryResult.IsFailure)
         {
@@ -20,26 +29,66 @@ public class MoveToMediaLocalDirectoryCommand : ICommand<string> // ICommand<T> 
             return;
         }
 
-        // Hier wird die eigentliche Dateibewegungsoperation ausgeführt. Dies ist derzeit nicht implementiert
-        // und dient nur der Darstellung des grundlegenden Aufbaus des Befehls.
-        var fileMovingResult = MoveFiles(publishedMediaLocalDirectoryResult.Value);
-        if (fileMovingResult.IsFailure)
-        {
-            _broadcaster.OnError(new Exception(fileMovingResult.Error));
-            return;
-        }
-
-        // Sendet das Ergebnis der Operation
-        _broadcaster.OnNext(fileMovingResult.Value);
+        // Durchführung der Dateiverschiebeoperation
+        MoveFiles(publishedMediaLocalDirectoryResult.Value, context);
 
         _broadcaster.OnCompleted();
     }
 
-    // Die MoveFiles-Methode soll die eigentliche Dateibewegung durchführen.
-    // Derzeit nicht implementiert und muss entsprechend Ihrer spezifischen Anforderungen ausgefüllt werden.
-    private Result<string> MoveFiles(ValidMediaLocalDirectory publishedMediaLocalDirectory)
+    // Verschiebt Dateien entsprechend dem Workflow-Kontext
+    private void MoveFiles(ValidMediaLocalDirectory publishedMediaLocalDirectory, WorkflowContext context)
     {
-        // placeholder
-        return Result.Success($"Moved to {publishedMediaLocalDirectory.FullPath}");
+        foreach (var mpeg4File in context.PublishedMpeg4Directory.Mpeg4Files)
+        {
+            var mpeg4MetadataResult = Mpeg4MetadataContainer.Create(mpeg4File.FullName);
+            if (mpeg4MetadataResult.IsFailure)
+            {
+                _broadcaster.OnError(new Exception(mpeg4MetadataResult.Error));
+                return;
+            }
+
+            var mpeg4Metadata = mpeg4MetadataResult.Value;
+
+            // Hier wird das Album ausgelesen oder Standard-Album
+            var album = mpeg4Metadata.Album.HasValue ? mpeg4Metadata.Album.Value : DefaultAlbum;  
+
+            // Sicherstellten, dass das Albumverzeichnis existiert
+            var albumDirectoryPath = Path.Combine(publishedMediaLocalDirectory.FullPath, album);
+            var albumDirectory = CreateDirectoryIfNotExists(albumDirectoryPath);
+
+            // Erstellen eines TV Show basierten Verzeichnisses
+            var tvShowDirectoryResult = ValidTvShowBasedLocalDirectory.Create(albumDirectoryPath);
+            if (tvShowDirectoryResult.IsFailure)
+            {
+                _broadcaster.OnError(new Exception(tvShowDirectoryResult.Error));
+                return;
+            }
+
+            // Berechnen der Details für die nächste Staffel
+            var nextSeasonDetails = NextSeasonDetails.Create(tvShowDirectoryResult.Value);
+
+            // Verschieben der Datei
+            var newFilePath = Path.Combine(nextSeasonDetails.NextSeasonDirectory.FullName, mpeg4File.Name);
+            try
+            {
+                mpeg4File.MoveTo(newFilePath);
+                _broadcaster.OnNext(new FileInfo(newFilePath));
+            }
+            catch (Exception ex)
+            {
+                _broadcaster.OnError(ex);
+            }
+        }
+    }
+
+    // Erstellt ein Verzeichnis, wenn es nicht existiert
+    private DirectoryInfo CreateDirectoryIfNotExists(string path)
+    {
+        var directory = new DirectoryInfo(path);
+        if (!directory.Exists)
+        {
+            directory.Create();
+        }
+        return directory;
     }
 }
