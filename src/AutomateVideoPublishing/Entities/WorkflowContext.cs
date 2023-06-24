@@ -18,19 +18,28 @@ public class WorkflowContext
     /// <value></value>
     public ValidMpeg4Directory PublishedMpeg4Directory { get; }
 
-    private WorkflowContext(ValidQuickTimeMasterDirectory quickTimeMasterDirectory, ValidMpeg4Directory publishedMpeg4Directory)
+    /// <summary>
+    /// Das lokale Zielverzeichnis, in das die sortierten MPEG-4-Dateien verschoben werden sollen.
+    /// </summary>
+    public ValidMediaLocalDirectory PublishedMediaLocalDirectory { get; }
+
+    private WorkflowContext(
+        ValidQuickTimeMasterDirectory quickTimeMasterDirectory,
+        ValidMpeg4Directory publishedMpeg4Directory,
+        ValidMediaLocalDirectory publishedMediaLocalDirectory)
     {
         QuickTimeMasterDirectory = quickTimeMasterDirectory;
         PublishedMpeg4Directory = publishedMpeg4Directory;
+        PublishedMediaLocalDirectory = publishedMediaLocalDirectory;
     }
 
     /// <summary>
     /// Erstellt einen neuen invarianten Workflow-Context
     /// </summary>
-    /// <param name="quickTimeMasterDirectoryPath">Das Verzeichnis indem sich die QuickTime MOV-Masterdateien befinden.</param>
-    /// <param name="publishedMpeg4DirectoryPath">Das Standardverzeichnis falls QuickTimeMasterDirectory und/oder PublishedMpeg4Directory.</param>
-    /// <returns></returns>
-    public static Result<WorkflowContext> Create(string? quickTimeMasterDirectoryPath = "", string? publishedMpeg4DirectoryPath = "")
+    public static Result<WorkflowContext> Create(
+        string? quickTimeMasterDirectoryPath = "",
+        string? publishedMpeg4DirectoryPath = "",
+        string? publishedMediaLocalDirectoryPath = "")
     {
         // set values or default
         quickTimeMasterDirectoryPath = string.IsNullOrWhiteSpace(quickTimeMasterDirectoryPath) ? DefaultDirectory : quickTimeMasterDirectoryPath;
@@ -49,6 +58,15 @@ public class WorkflowContext
             return Result.Failure<WorkflowContext>(publishedMpeg4DirectoryResult.Error);
         }
 
-        return new WorkflowContext(quickTimeMasterDirectoryResult.Value, publishedMpeg4DirectoryResult.Value);
+        var publishedMediaLocalDirectoryResult = ValidMediaLocalDirectory.Create(publishedMediaLocalDirectoryPath);
+        if (publishedMediaLocalDirectoryResult.IsFailure)
+        {
+            return Result.Failure<WorkflowContext>(publishedMediaLocalDirectoryResult.Error);
+        }
+
+        return new WorkflowContext(
+            quickTimeMasterDirectoryResult.Value,
+            publishedMpeg4DirectoryResult.Value,
+            publishedMediaLocalDirectoryResult.Value);
     }
 }

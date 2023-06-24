@@ -76,6 +76,11 @@ class Program
 public class Options
 {
     /// <summary>
+    /// Name der zu verwendenden Workflow-Strategie.
+    /// </summary>
+    public string? Workflow { get; set; }
+
+    /// <summary>
     /// Pfad zum Verzeichnis, in dem sich die zu bearbeitenden QuickTime-Masterdateien befinden.
     /// </summary>
     public string? QuickTimeMasterDirectory { get; set; }
@@ -86,7 +91,7 @@ public class Options
     public string? PublishedMpeg4Directory { get; set; }
 
     /// <summary>
-    /// Name der zu verwendenden Workflow-Strategie.
+    /// Pfad zum lokalen Zielverzeichnis, in das die sortierten MPEG-4-Dateien verschoben werden sollen.
     /// </summary>
-    public string? Workflow { get; set; }
+    public string? PublishedMediaLocalDirectory { get; set; }
 }
