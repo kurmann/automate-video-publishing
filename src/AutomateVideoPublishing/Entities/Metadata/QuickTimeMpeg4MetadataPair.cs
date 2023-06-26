@@ -1,5 +1,6 @@
 namespace AutomateVideoPublishing.Entities.Metadata;
 
+[Obsolete("Use QuickTimeMpeg4MetadataContainerPair instead")]
 public class QuickTimeMpeg4MetadataPair
 {
     private readonly QuickTimeMpeg4Pair _pair;
