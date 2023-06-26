@@ -15,6 +15,38 @@ public class QuickTimeMpeg4MetadataContainerPair
     /// </summary>
     public Mpeg4MetadataContainer Mpeg4Container { get; private set; }
 
+    public bool IsYearSame
+    {
+        get
+        {
+            var sourceYear = QuickTimeContainer.YearByFilename;
+            var targetYear = Mpeg4Container.Year;
+
+            if (sourceYear.HasValue && targetYear.HasValue)
+            {
+                return sourceYear.Value == targetYear.Value;
+            }
+
+            return false;
+        }
+    }
+
+    public bool IsDescriptionSame
+    {
+        get
+        {
+            var sourceDescription = QuickTimeContainer.Description;
+            var targetDescription = Mpeg4Container.Description;
+
+            if (sourceDescription.HasValue && targetDescription.HasValue)
+            {
+                return sourceDescription.Value == targetDescription;
+            }
+
+            return false;
+        }
+    }
+
     private QuickTimeMpeg4MetadataContainerPair(QuickTimeMetadataContainer quickTimeContainer, Mpeg4MetadataContainer mpeg4Container)
     {
         QuickTimeContainer = quickTimeContainer;
