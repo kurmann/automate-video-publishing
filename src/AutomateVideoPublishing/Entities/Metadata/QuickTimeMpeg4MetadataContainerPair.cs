@@ -75,4 +75,17 @@ public class QuickTimeMpeg4MetadataContainerPair
 
         return Result.Success(new QuickTimeMpeg4MetadataContainerPair(quickTimeResult.Value, mpeg4Result.Value));
     }
+
+    /// <summary>
+    /// Überschreibt die ToString-Methode, um den Dateinamen des QuickTime- und des MPEG-4-Files, getrennt durch eine Pipe, zurückzugeben.
+    /// </summary>
+    /// <returns>Eine Zeichenkette, die die QuickTime- und MPEG-4-Dateinamen enthält, getrennt durch eine Pipe.</returns>
+    public override string ToString()
+    {
+        var quickTimeFileName = QuickTimeContainer.FileInfo.Name;
+        var mpeg4FileName = Mpeg4Container.FileInfo.Name;
+
+        return $"{quickTimeFileName} | {mpeg4FileName}";
+    }
+
 }

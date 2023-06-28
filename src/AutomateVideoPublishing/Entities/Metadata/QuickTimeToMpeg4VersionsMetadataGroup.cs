@@ -56,8 +56,4 @@ public class QuickTimeToMpeg4VersionsMetadataGroup
 
         return Result.Success(new QuickTimeToMpeg4VersionsMetadataGroup(quickTimeContainerResult.Value, mpeg4MetadataContainers));
     }
-
-
-
-    // Methoden zum Überprüfen und Anwenden von Metadatenänderungen können hier eingefügt werden.
 }
