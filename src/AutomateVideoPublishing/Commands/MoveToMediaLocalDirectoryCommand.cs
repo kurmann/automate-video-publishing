@@ -13,28 +13,28 @@ public class MoveToMediaLocalDirectoryCommand : ICommand<FileInfo>
 
     public IObservable<FileInfo> WhenDataAvailable => _broadcaster.AsObservable();
 
-    public MoveToMediaLocalDirectoryCommand(MetadataTransferCommand metadataTransferCommand)
-    {
-        _metadataTransferCommand = metadataTransferCommand;
-    }
+    public MoveToMediaLocalDirectoryCommand(MetadataTransferCommand metadataTransferCommand) => _metadataTransferCommand = metadataTransferCommand;
 
     public void Execute(WorkflowContext context)
     {
         _metadataTransferCommand.WhenDataAvailable.Subscribe(
-            onNext: transferResult =>
+            onNext: transferResult => { /* Nichts zu tun hier, wir warten auf das Abschlussereignis */ },
+            onError: ex => _broadcaster.OnError(ex),
+            onCompleted: () =>
             {
+                // Erzeugen eines gültigen lokalen Medienverzeichnisses basierend auf dem Kontext
                 var publishedMediaLocalDirectoryResult = ValidMediaLocalDirectory.Create(context.PublishedMediaLocalDirectory.FullPath);
                 if (publishedMediaLocalDirectoryResult.IsFailure)
                 {
                     _broadcaster.OnError(new Exception(publishedMediaLocalDirectoryResult.Error));
-                    return;
                 }
-
-                // Durchführung der Dateiverschiebeoperation nur wenn der Metadatentransfer erfolgreich war
-                MoveFiles(publishedMediaLocalDirectoryResult.Value, context);
-            },
-            onError: ex => _broadcaster.OnError(ex),
-            onCompleted: () => _broadcaster.OnCompleted());
+                else
+                {
+                    // Durchführung der Dateiverschiebeoperation nur nachdem alle Metadatenübertragungen abgeschlossen sind.
+                    MoveFiles(publishedMediaLocalDirectoryResult.Value, context);
+                    _broadcaster.OnCompleted();
+                }
+            });
 
         _metadataTransferCommand.Execute(context);
     }
@@ -54,7 +54,7 @@ public class MoveToMediaLocalDirectoryCommand : ICommand<FileInfo>
             var mpeg4Metadata = mpeg4MetadataResult.Value;
 
             // Hier wird das Album ausgelesen oder Standard-Album
-            var album = mpeg4Metadata.Album.HasValue ? mpeg4Metadata.Album.Value : DefaultAlbum;  
+            var album = mpeg4Metadata.Album.HasValue ? mpeg4Metadata.Album.Value : DefaultAlbum;
 
             // Sicherstellten, dass das Albumverzeichnis existiert
             var albumDirectoryPath = Path.Combine(publishedMediaLocalDirectory.FullPath, album);
