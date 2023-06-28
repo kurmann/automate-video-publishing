@@ -13,7 +13,8 @@ public class VideoPublishAndArchiveStrategy : IWorkflowStrategy
     public void Execute(WorkflowContext context)
     {
         var metadataReadCommand = new QuickTimeMetadataReadCommand();
-        var metadataTransferCommand = new MetadataTransferCommand(metadataReadCommand);
+        var pairCollectorCommand = new PairCollectorCommand(metadataReadCommand);
+        var metadataTransferCommand = new MetadataTransferCommand(pairCollectorCommand);
         var moveToMediaLocalDirectoryCommand = new MoveToMediaLocalDirectoryCommand();
 
         metadataTransferCommand.WhenDataAvailable.Subscribe(

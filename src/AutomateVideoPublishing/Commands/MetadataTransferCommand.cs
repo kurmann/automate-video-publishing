@@ -3,63 +3,54 @@ using System.Reactive.Subjects;
 
 namespace AutomateVideoPublishing.Commands;
 
-public class MetadataTransferCommand : ICommand<MetadataTransferResult>
+public class MetadataTransferCommand : ICommand<CombinedMetadataTransferResult>
 {
-    private readonly QuickTimeMetadataReadCommand _quickTimeCommand;
-    private readonly Subject<MetadataTransferResult> _broadcaster = new();
+    private readonly PairCollectorCommand _pairCollectorCommand;
+    private readonly Subject<CombinedMetadataTransferResult> _broadcaster = new();
 
-    public IObservable<MetadataTransferResult> WhenDataAvailable => _broadcaster.AsObservable();
+    public IObservable<CombinedMetadataTransferResult> WhenDataAvailable => _broadcaster.AsObservable();
 
-    public MetadataTransferCommand(QuickTimeMetadataReadCommand quickTimeCommand) => _quickTimeCommand = quickTimeCommand;
+    public MetadataTransferCommand(PairCollectorCommand pairCollectorCommand) => _pairCollectorCommand = pairCollectorCommand;
 
     public void Execute(WorkflowContext context)
     {
-        _quickTimeCommand.WhenDataAvailable
-            .Select(container =>
-            {
-                var targetDirectoryPath = context.PublishedMpeg4Directory.Directory.FullName;
-                var pairResult = QuickTimeMpeg4MetadataPair.Create(container.FileInfo.FullName, targetDirectoryPath);
-
-                if (pairResult.IsFailure)
-                {
-                    _broadcaster.OnNext(MetadataTransferResult.CreatePairNotFound(container.FileInfo.FullName));
-                    return null;
-                }
-
-                return pairResult.Value;
-            })
-            .Where(pair => pair != null)
+        _pairCollectorCommand.WhenDataAvailable
             .Subscribe(pair =>
             {
-                var result = ApplyMetadataChanges(pair!);
+                var combinedResult = new CombinedMetadataTransferResult(pair, MetadataAttribute.Description | MetadataAttribute.Year);
+                var result = ApplyMetadataChanges(pair);
                 if (result.IsSuccess)
                 {
-                    var analyzeResult = AnalyzeTransfer(pair!);
-                    if (analyzeResult.IsFailure)
+                    var analyzeResults = AnalyzeTransfer(pair);
+                    if (analyzeResults.IsFailure)
                     {
-                        _broadcaster.OnError(new Exception(analyzeResult.Error));
+                        _broadcaster.OnError(new Exception(analyzeResults.Error));
                     }
-                    else 
+                    else
                     {
-                        _broadcaster.OnNext(analyzeResult.Value);
+                        foreach (var analyzeResult in analyzeResults.Value)
+                        {
+                            combinedResult.AddAttributeResult(analyzeResult);
+                        }
+                        _broadcaster.OnNext(combinedResult);
                     }
                 }
                 else
                 {
-                    _broadcaster.OnError(new Exception($"Unexpected error on metadata transfer: {result.Error}"));
+                    _broadcaster.OnError(new Exception($"Unerwarteter Fehler beim Metadatentransfer: {result.Error}"));
                 }
             });
 
-        _quickTimeCommand.Execute(context);
+        _pairCollectorCommand.Execute(context);
         _broadcaster.OnCompleted();
     }
 
-    private Result ApplyMetadataChanges(QuickTimeMpeg4MetadataPair pair)
+    private Result ApplyMetadataChanges(QuickTimeMpeg4MetadataContainerPair pair)
     {
         try
         {
-            var quickTimeMetadataContainer = pair.QuickTimeMetadataContainer;
-            var mpeg4 = pair.Mpeg4MetadataContainer;
+            var quickTimeMetadataContainer = pair.QuickTimeContainer;
+            var mpeg4 = pair.Mpeg4Container;
 
             var mpeg4TagLibFile = TagLib.File.Create(mpeg4.FileInfo.FullName);
 
@@ -91,19 +82,22 @@ public class MetadataTransferCommand : ICommand<MetadataTransferResult>
         }
     }
 
-    private Result<MetadataTransferResult> AnalyzeTransfer(QuickTimeMpeg4MetadataPair pair)
+    private Result<List<MetadataTransferResult>> AnalyzeTransfer(QuickTimeMpeg4MetadataContainerPair pair)
     {
-        // Read metadata after changes are applied.
-        var postPair = QuickTimeMpeg4MetadataPair.Create(pair.QuickTimeMetadataContainer.FileInfo.FullName, pair.Mpeg4MetadataContainer.FileInfo.DirectoryName);
+        // Lese Metadaten nach dem die Änderungen angewandt wurden
+        var postPair = QuickTimeMpeg4MetadataContainerPair.Create(pair.QuickTimeContainer.FileInfo.FullName,
+                                                                  pair.Mpeg4Container.FileInfo.FullName);
 
         if (postPair.IsFailure)
         {
-            return Result.Failure<MetadataTransferResult>($"Unexpected error on analizying executed metadata transfer: {postPair.Error}");
+            return Result.Failure<List<MetadataTransferResult>>($"Unexpected error on analyzing executed metadata transfer: {postPair.Error}");
         }
 
-        var analyzer = new MetadataTransferAnalyzer(pair, postPair.Value);
-        return analyzer.Analyze();
+        // Vergleiche die Metadaten vor und nachher.
+        var analyzer = MetadataGroupTransferAnalyzer.Create(pair, postPair.Value);
+        var metadataAttribute = MetadataAttribute.Description | MetadataAttribute.Year;
+        var analyzeResults = analyzer.Analyze(metadataAttribute);
+
+        return Result.Success(analyzeResults);
     }
-
-
 }

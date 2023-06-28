@@ -1,57 +1,65 @@
 namespace AutomateVideoPublishing.Entities.Metadata;
 
+/// <summary>
+/// Klasse für die Analyse des Metadaten-Transfers zwischen QuickTime- und Mpeg4-Containern.
+/// </summary>
 public class MetadataGroupTransferAnalyzer
 {
-    private QuickTimeToMpeg4VersionsMetadataGroup _beforeTransfer;
-    private QuickTimeToMpeg4VersionsMetadataGroup _afterTransfer;
+    private QuickTimeMpeg4MetadataContainerPair _beforeTransfer;
+    private QuickTimeMpeg4MetadataContainerPair _afterTransfer;
 
-    public MetadataGroupTransferAnalyzer(QuickTimeToMpeg4VersionsMetadataGroup beforeTransfer, QuickTimeToMpeg4VersionsMetadataGroup afterTransfer)
+    /// <summary>
+    /// Privater Konstruktor, der die Zustände vor und nach dem Transfer initialisiert.
+    /// </summary>
+    /// <param name="beforeTransfer">Paar von Containern vor dem Transfer.</param>
+    /// <param name="afterTransfer">Paar von Containern nach dem Transfer.</param>
+    private MetadataGroupTransferAnalyzer(QuickTimeMpeg4MetadataContainerPair beforeTransfer, QuickTimeMpeg4MetadataContainerPair afterTransfer)
     {
         _beforeTransfer = beforeTransfer;
         _afterTransfer = afterTransfer;
     }
 
-    public IEnumerable<MetadataTransferResult> Analyze()
+    /// <summary>
+    /// Erstellt eine neue Instanz der Klasse mit den gegebenen Zuständen vor und nach dem Transfer.
+    /// </summary>
+    /// <param name="beforeTransfer">Paar von Containern vor dem Transfer.</param>
+    /// <param name="afterTransfer">Paar von Containern nach dem Transfer.</param>
+    /// <returns>Eine neue Instanz der Klasse.</returns>
+    public static MetadataGroupTransferAnalyzer Create(QuickTimeMpeg4MetadataContainerPair beforeTransfer, QuickTimeMpeg4MetadataContainerPair afterTransfer)
     {
-        var quickTimeMetadataContainer = _beforeTransfer.QuickTimeMetadataContainer;
+        return new MetadataGroupTransferAnalyzer(beforeTransfer, afterTransfer);
+    }
 
+    /// <summary>
+    /// Führt eine Analyse des Metadaten-Transfers durch und gibt die Ergebnisse zurück.
+    /// </summary>
+    /// <param name="metadataAttribute">Die zu übertragenden Metadatenattribute.</param>
+    /// <returns>Eine Liste der Transferergebnisse für die verschiedenen Metadatenattribute.</returns>
+    public List<MetadataTransferResult> Analyze(MetadataAttribute metadataAttribute)
+    {
         var results = new List<MetadataTransferResult>();
 
-        foreach (var mpeg4 in _afterTransfer.Mpeg4MetadataContainers)
-        {
-            var beforeTransferPair = QuickTimeMpeg4MetadataPair.Create(_beforeTransfer.QuickTimeMetadataContainer.FileInfo.FullName, mpeg4.FileInfo.DirectoryName).Value;
-            var afterTransferPair = QuickTimeMpeg4MetadataPair.Create(_afterTransfer.QuickTimeMetadataContainer.FileInfo.FullName, mpeg4.FileInfo.DirectoryName).Value;
+        var beforeTransferPair = _beforeTransfer;
+        var afterTransferPair = _afterTransfer;
 
-            var descriptionTransferred = !beforeTransferPair.IsDescriptionSame && quickTimeMetadataContainer.Description.HasValue
-                ? quickTimeMetadataContainer.Description.Value
-                : null;
-
-            var yearTransferred = !beforeTransferPair.IsYearSame && quickTimeMetadataContainer.YearByFilename.HasValue
-                ? quickTimeMetadataContainer.YearByFilename.Value
-                : (uint?)null;
-
-            bool isDescriptionTransferred = descriptionTransferred != null;
-            bool isYearTransferred = yearTransferred.HasValue;
-
-            var result = MetadataTransferResult.Create(
-                sourceFile: quickTimeMetadataContainer.FileInfo.FullName,
-                targetFile: mpeg4.FileInfo.FullName,
-                descriptionTransferStatus: isDescriptionTransferred
-                    ? MetadataTransferResult.TransferStatus.Success
-                    : MetadataTransferResult.TransferStatus.NotRequired,
-                yearTransferStatus: isYearTransferred
-                    ? MetadataTransferResult.TransferStatus.Success
-                    : MetadataTransferResult.TransferStatus.NotRequired,
-                descriptionTransferred: descriptionTransferred != null ? Maybe.From(descriptionTransferred) : Maybe<string>.None,
-                yearTransferred: yearTransferred.HasValue && yearTransferred.HasValue
-                    ? Maybe.From(yearTransferred.Value)
-                    : Maybe<uint>.None,
-                isDescriptionTransferred: isDescriptionTransferred,
-                isYearTransferred: isYearTransferred,
-                isFoundPair: true
+        // Überprüfung und Analyse des Beschreibungstransfers, wenn das Attribut gesetzt ist
+        if (metadataAttribute.HasFlag(MetadataAttribute.Description)) {
+            var descriptionTransferStatus = beforeTransferPair.IsDescriptionSame && afterTransferPair.IsDescriptionSame
+                ? TransferStatus.Success
+                : TransferStatus.Failed;
+            results.Add(
+                new MetadataTransferResult(beforeTransferPair.QuickTimeContainer.FileInfo, afterTransferPair.Mpeg4Container.FileInfo, MetadataAttribute.Description, descriptionTransferStatus)
             );
+        }
 
-            results.Add(result);
+        // Überprüfung und Analyse des Jahrtransfers, wenn das Attribut gesetzt ist
+        if(metadataAttribute.HasFlag(MetadataAttribute.Year)) {
+            var yearTransferStatus = beforeTransferPair.IsYearSame && afterTransferPair.IsYearSame
+                ? TransferStatus.Success
+                : TransferStatus.Failed;
+            results.Add(
+                new MetadataTransferResult(beforeTransferPair.QuickTimeContainer.FileInfo, afterTransferPair.Mpeg4Container.FileInfo, MetadataAttribute.Year, yearTransferStatus)
+            );
         }
 
         return results;
