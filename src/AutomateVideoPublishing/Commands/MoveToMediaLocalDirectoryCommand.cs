@@ -5,34 +5,38 @@ namespace AutomateVideoPublishing.Commands;
 
 public class MoveToMediaLocalDirectoryCommand : ICommand<FileInfo>
 {
+    private readonly MetadataTransferCommand _metadataTransferCommand;
     private readonly Subject<FileInfo> _broadcaster = new();
 
-    /// <summary>
-    /// Präfix für Staffelverzeichnisse
-    /// </summary>
     public static readonly string SeasonPrefix = "Staffel ";
-
-    /// <summary>
-    /// Standard Album-Verzeichnis
-    /// </summary>
     public static readonly string DefaultAlbum = "TV Shows";
 
     public IObservable<FileInfo> WhenDataAvailable => _broadcaster.AsObservable();
 
+    public MoveToMediaLocalDirectoryCommand(MetadataTransferCommand metadataTransferCommand)
+    {
+        _metadataTransferCommand = metadataTransferCommand;
+    }
+
     public void Execute(WorkflowContext context)
     {
-        // Erzeugen eines gültigen lokalen Medienverzeichnisses basierend auf dem Kontext
-        var publishedMediaLocalDirectoryResult = ValidMediaLocalDirectory.Create(context.PublishedMediaLocalDirectory.FullPath);
-        if (publishedMediaLocalDirectoryResult.IsFailure)
-        {
-            _broadcaster.OnError(new Exception(publishedMediaLocalDirectoryResult.Error));
-            return;
-        }
+        _metadataTransferCommand.WhenDataAvailable.Subscribe(
+            onNext: transferResult =>
+            {
+                var publishedMediaLocalDirectoryResult = ValidMediaLocalDirectory.Create(context.PublishedMediaLocalDirectory.FullPath);
+                if (publishedMediaLocalDirectoryResult.IsFailure)
+                {
+                    _broadcaster.OnError(new Exception(publishedMediaLocalDirectoryResult.Error));
+                    return;
+                }
 
-        // Durchführung der Dateiverschiebeoperation
-        MoveFiles(publishedMediaLocalDirectoryResult.Value, context);
+                // Durchführung der Dateiverschiebeoperation nur wenn der Metadatentransfer erfolgreich war
+                MoveFiles(publishedMediaLocalDirectoryResult.Value, context);
+            },
+            onError: ex => _broadcaster.OnError(ex),
+            onCompleted: () => _broadcaster.OnCompleted());
 
-        _broadcaster.OnCompleted();
+        _metadataTransferCommand.Execute(context);
     }
 
     // Verschiebt Dateien entsprechend dem Workflow-Kontext
