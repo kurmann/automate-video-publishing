@@ -1,5 +1,6 @@
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using TagLib;
 
 namespace AutomateVideoPublishing.Commands;
 
@@ -103,6 +104,9 @@ public class MetadataTransferCommand : ICommand<CombinedMetadataTransferResult>
                 mpeg4TagLibFile.Tag.Year = yearTransferred.Value;
             }
 
+            // Setze Apple Tag
+            SetReleaseDate(mpeg4TagLibFile, new DateTime(2024, 02, 24));
+
             mpeg4TagLibFile.Save();
             return Result.Success();
         }
@@ -136,4 +140,17 @@ public class MetadataTransferCommand : ICommand<CombinedMetadataTransferResult>
 
         return Result.Success(analyzeResults);
     }
+
+    static void SetReleaseDate(TagLib.File taglibFile, DateTime releaseDate)
+    {
+        var tags = (TagLib.Mpeg4.AppleTag)taglibFile.GetTag(TagLib.TagTypes.Apple);
+
+        TagLib.ByteVector releaseDateTagName = new TagLib.ByteVector(new byte[] { 0xA9, (byte)'d', (byte)'a', (byte)'y' });
+        string releaseDateText = releaseDate.ToString("yyyy");
+        tags.SetText(releaseDateTagName, releaseDateText);
+    }
+
+
+
+
 }
