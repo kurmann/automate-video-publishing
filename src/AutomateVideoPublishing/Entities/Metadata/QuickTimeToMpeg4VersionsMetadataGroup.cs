@@ -17,14 +17,14 @@ public class QuickTimeToMpeg4VersionsMetadataGroup
 
         if (quickTimeContainerResult.IsFailure)
         {
-            return Result.Failure<QuickTimeToMpeg4VersionsMetadataGroup>(quickTimeContainerResult.Error);
+            return Result.Failure<QuickTimeToMpeg4VersionsMetadataGroup>($"Error on reading QuickTime metadata: {quickTimeContainerResult.Error}");
         }
 
         var validMpeg4DirectoryResult = ValidMpeg4Directory.Create(targetDirectoryPath);
 
         if (validMpeg4DirectoryResult.IsFailure)
         {
-            return Result.Failure<QuickTimeToMpeg4VersionsMetadataGroup>(validMpeg4DirectoryResult.Error);
+            return Result.Failure<QuickTimeToMpeg4VersionsMetadataGroup>($"Error on reading MPEG-4 metadata: {validMpeg4DirectoryResult.Error}");
         }
 
         var quickTimeFileInfo = new FileInfo(quickTimeFilePath);
