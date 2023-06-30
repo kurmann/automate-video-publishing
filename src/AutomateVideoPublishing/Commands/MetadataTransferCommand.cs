@@ -104,8 +104,8 @@ public class MetadataTransferCommand : ICommand<CombinedMetadataTransferResult>
                 mpeg4TagLibFile.Tag.Year = yearTransferred.Value;
             }
 
-            // Setze Apple Tag
-            SetReleaseDate(mpeg4TagLibFile, new DateTime(2024, 02, 24));
+            // Setze Apple Tag (todo: wenn vollständig funktioniert)
+            // SetReleaseDate(mpeg4TagLibFile, new DateTime(2024, 02, 24));
 
             mpeg4TagLibFile.Save();
             return Result.Success();
