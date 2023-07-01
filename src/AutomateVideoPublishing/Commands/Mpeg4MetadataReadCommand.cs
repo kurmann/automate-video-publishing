@@ -32,7 +32,7 @@ public class Mpeg4MetadataReadCommand : ICommand<string>
             RedirectStandardError = true,
             UseShellExecute = false,
             CreateNoWindow = true,
-            Arguments = $"-c \"{atomicParsleyReadCommand}\""
+            Arguments = $"-c \"\\\"{atomicParsleyReadCommand}\\\"\""
         };
 
         var process = Process.Start(startInfo);

@@ -82,7 +82,7 @@ public class AtomicParsleyWriteCommand : IAtomicParsleyCommand
         return this;
     }
 
-    public override string ToString() => $"{atomicParsleyPath} {string.Join(" ", arguments)}";
+    public override string ToString() => $"{atomicParsleyPath} {string.Join(" ", arguments)}".Replace("\"", "\\\"");
 
     public static implicit operator string(AtomicParsleyWriteCommand cmd) => cmd.ToString();
 }
