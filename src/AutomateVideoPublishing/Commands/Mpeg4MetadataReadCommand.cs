@@ -47,7 +47,8 @@ public class Mpeg4MetadataReadCommand : ICommand<string>
 
         if (!string.IsNullOrEmpty(error))
         {
-            throw new Exception($"AtomicParsley execution error: {error}");
+            var exception = new Exception($"AtomicParsley execution error: {error}");
+            _broadcaster.OnError(exception);
         }
 
         return output;
