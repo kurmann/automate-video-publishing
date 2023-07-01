@@ -16,6 +16,7 @@ public class Mpeg4MetadataReadCommand : ICommand<string>
         foreach (var fileInfo in context.PublishedMpeg4Directory.Mpeg4Files)
         {
             var atomicParsleyReadCommand = new AtomicParsleyCommand(fileInfo.FullName).ForReading().WithMetadata();
+            _broadcaster.OnNext($"Running following command: {atomicParsleyReadCommand}");
             var consoleOutput = RunAtomicParsley(atomicParsleyReadCommand);
             _broadcaster.OnNext(consoleOutput);
         }
