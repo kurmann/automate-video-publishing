@@ -35,36 +35,4 @@ public class Mpeg4MetadataReadCommand : ICommand<AtomicParsleyMetadataReadResult
             atomicParsleyRunCommand.Run(fileInfo.FullName);
         }
     }
-
-    [Obsolete]
-    private string RunAtomicParsley(AtomicParsleyReadCommand atomicParsleyReadCommand)
-    {
-        var startInfo = new ProcessStartInfo
-        {
-            FileName = "/bin/bash",
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true,
-            Arguments = $"-c \"{atomicParsleyReadCommand.ToString().Replace("\"", "\\\"")}\""
-        };
-
-        var process = Process.Start(startInfo);
-        if (process == null)
-        {
-            throw new Exception("Initialized process for AtomicParsley is null");
-        }
-        process.WaitForExit();
-
-        var output = process.StandardOutput.ReadToEnd();
-        var error = process.StandardError.ReadToEnd();
-
-        if (!string.IsNullOrEmpty(error))
-        {
-            var exception = new Exception($"AtomicParsley execution error: {error}");
-            _broadcaster.OnError(exception);
-        }
-
-        return output;
-    }
 }
