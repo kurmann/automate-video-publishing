@@ -14,7 +14,7 @@ public class ValidMpeg4Directory
     /// <summary>
     /// Eine Sammlung von FileInfo-Objekten, die MPEG-4 Dateien im Verzeichnis repräsentieren. Wenn keine Dateien gefunden werden, ist die Liste leer.
     /// </summary>
-    public IEnumerable<FileInfo> Mpeg4Files { get; }
+    public List<FileInfo> Mpeg4Files { get; }
 
     private ValidMpeg4Directory(DirectoryInfo directory, List<FileInfo> mpeg4Files)
     {
