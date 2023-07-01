@@ -24,6 +24,8 @@ public class Mpeg4MetadataReadCommand : ICommand<AtomicParsleyMetadataReadResult
                 return;
             }
 
+            var atomicParsleyRunCommand = new AtomicParsleyRunCommand();
+
             atomicParsleyRunCommand.Lines.Subscribe(onNext: line =>
             {
                 atomicParsleyMetadataReadResultResult.Value.AddLine(line);
@@ -35,4 +37,5 @@ public class Mpeg4MetadataReadCommand : ICommand<AtomicParsleyMetadataReadResult
             atomicParsleyRunCommand.Run(fileInfo.FullName);
         }
     }
+
 }
