@@ -30,6 +30,8 @@ public class LocalVideoPublishStrategy : IWorkflowStrategy
             }
         );
 
+        mpeg4MetadataReadCommand.Execute(context);
+
         _broadcaster.OnCompleted();
     }
 }
