@@ -2,8 +2,6 @@ namespace AutomateVideoPublishing.Strategies;
 
 public class WorkflowStrategyMapper
 {
-    public const string ReadAllMetadataStrategy = nameof(ReadAllMetadataStrategy);
-    public const string VideoPublishAndArchiveStrategy = nameof(VideoPublishAndArchiveStrategy);
 
     public IWorkflowStrategy SelectedStrategy { get; private set; }
 
@@ -13,17 +11,20 @@ public class WorkflowStrategyMapper
     {
         if (string.IsNullOrWhiteSpace(strategyName))
         {
-            strategyName = ReadAllMetadataStrategy;
+            strategyName = nameof(ReadAllMetadataStrategy);
         }
 
         IWorkflowStrategy strategy;
         switch (strategyName)
         {
-            case ReadAllMetadataStrategy:
+            case nameof(ReadAllMetadataStrategy):
                 strategy = new ReadAllMetadataStrategy();
                 break;
-            case VideoPublishAndArchiveStrategy:
+            case nameof(VideoPublishAndArchiveStrategy):
                 strategy = new VideoPublishAndArchiveStrategy();
+                break;
+            case nameof(LocalVideoPublishStrategy):
+                strategy = new LocalVideoPublishStrategy();
                 break;
             default:
                 return Result.Failure<WorkflowStrategyMapper, string>($"Unknown strategy: {strategyName}");
