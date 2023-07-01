@@ -21,13 +21,13 @@ public class WriteMetadataToTextFileCommand : ICommand<FileInfo>
                     WriteLinesAsync(result.FileInfo, result.Lines)
                         .ContinueWith(task =>
                         {
-                            if (task.IsFaulted)
+                            if (task.Result.IsFailure)
                             {
-                                _broadcaster.OnError(task.Exception ?? new Exception("Error on writing lines to TXT file"));
+                                _broadcaster.OnError(new Exception(task.Result.Error));
                             }
                             else
                             {
-                                _broadcaster.OnNext(result.FileInfo);
+                                _broadcaster.OnNext(task.Result.Value);
                             }
                         });
                 },
@@ -44,14 +44,27 @@ public class WriteMetadataToTextFileCommand : ICommand<FileInfo>
         _readCommand.Execute(context);
     }
 
-    private static async Task WriteLinesAsync(FileInfo fileInfo, IReadOnlyList<string> lines)
-    {
-        using var fileStream = fileInfo.Open(FileMode.Append, FileAccess.Write);
-        using var streamWriter = new StreamWriter(fileStream);
 
-        foreach (var line in lines)
+    private static async Task<Result<FileInfo>> WriteLinesAsync(FileInfo fileInfo, IReadOnlyList<string> lines)
+    {
+        try
         {
-            await streamWriter.WriteLineAsync(line);
+            var txtFileName = Path.ChangeExtension(fileInfo.FullName, ".txt");
+            using var fileStream = new FileStream(txtFileName, FileMode.Append, FileAccess.Write);
+            using var streamWriter = new StreamWriter(fileStream);
+
+            foreach (var line in lines)
+            {
+                await streamWriter.WriteLineAsync(line);
+            }
+
+            return new FileInfo(txtFileName);
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure<FileInfo>(ex.Message);
         }
     }
+
+
 }

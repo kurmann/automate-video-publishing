@@ -50,5 +50,8 @@ public class AtomicParsleyRunCommand
 
         process.Start();
         process.BeginOutputReadLine();
+        process.WaitForExit();  // Warte, bis der Prozess beendet ist.
     }
+
+
 }

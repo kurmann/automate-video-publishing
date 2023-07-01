@@ -12,14 +12,16 @@ public class LocalVideoPublishStrategy : IWorkflowStrategy
 
     public void Execute(WorkflowContext context)
     {
-        var mpeg4MetadataReadCommand = new Mpeg4MetadataReadCommand();
+        var atomicParsleyRunCommand = new AtomicParsleyRunCommand();
+        var mmeg4MetadataReadCommand = new Mpeg4MetadataReadCommand(atomicParsleyRunCommand);
+        var writeMetadataToTextFileCommand = new WriteMetadataToTextFileCommand(mmeg4MetadataReadCommand);
 
-        mpeg4MetadataReadCommand.WhenDataAvailable.Subscribe(
-            consoleOutput =>
+        writeMetadataToTextFileCommand.WhenDataAvailable.Subscribe(
+            fileInfo =>
             {
-                if (consoleOutput != null)
+                if (fileInfo != null)
                 {
-                    _broadcaster.OnNext(consoleOutput);
+                    _broadcaster.OnNext($"Metdata written to file: {fileInfo.FullName}");
                 }
             },
             exception =>
@@ -29,6 +31,6 @@ public class LocalVideoPublishStrategy : IWorkflowStrategy
             }
         );
 
-        mpeg4MetadataReadCommand.Execute(context);
+        writeMetadataToTextFileCommand.Execute(context);
     }
 }

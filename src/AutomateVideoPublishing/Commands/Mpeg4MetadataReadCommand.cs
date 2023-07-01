@@ -4,26 +4,39 @@ using System.Reactive.Subjects;
 
 namespace AutomateVideoPublishing.Commands;
 
-public class Mpeg4MetadataReadCommand : ICommand<string>
+public class Mpeg4MetadataReadCommand : ICommand<AtomicParsleyMetadataReadResult>
 {
-    private readonly Subject<string> _broadcaster = new();
-    public IObservable<string> WhenDataAvailable => _broadcaster.AsObservable();
+    private readonly Subject<AtomicParsleyMetadataReadResult> _broadcaster = new();
+    private readonly AtomicParsleyRunCommand atomicParsleyRunCommand;
 
-    public Mpeg4MetadataReadCommand() { }
+    public IObservable<AtomicParsleyMetadataReadResult> WhenDataAvailable => _broadcaster.AsObservable();
+
+    public Mpeg4MetadataReadCommand(AtomicParsleyRunCommand atomicParsleyRunCommand) => this.atomicParsleyRunCommand = atomicParsleyRunCommand;
 
     public void Execute(WorkflowContext context)
     {
         foreach (var fileInfo in context.PublishedMpeg4Directory.Mpeg4Files)
         {
-            var atomicParsleyReadCommand = new AtomicParsleyCommand(fileInfo.FullName).ForReading().WithMetadata();
-            _broadcaster.OnNext($"Running following command: {atomicParsleyReadCommand}");
-            var consoleOutput = RunAtomicParsley(atomicParsleyReadCommand);
-            _broadcaster.OnNext(consoleOutput);
-        }
+            var atomicParsleyMetadataReadResultResult = AtomicParsleyMetadataReadResult.Create(fileInfo);
+            if (atomicParsleyMetadataReadResultResult.IsFailure)
+            {
+                _broadcaster.OnError(new Exception($"Error on preparing AtomicParsley result: {atomicParsleyMetadataReadResultResult.Error}"));
+                return;
+            }
 
-        _broadcaster.OnCompleted();
+            atomicParsleyRunCommand.Lines.Subscribe(onNext: line =>
+            {
+                atomicParsleyMetadataReadResultResult.Value.AddLine(line);
+            }, onCompleted: () =>
+            {
+                _broadcaster.OnNext(atomicParsleyMetadataReadResultResult.Value);
+            });
+
+            atomicParsleyRunCommand.Run(fileInfo.FullName);
+        }
     }
 
+    [Obsolete]
     private string RunAtomicParsley(AtomicParsleyReadCommand atomicParsleyReadCommand)
     {
         var startInfo = new ProcessStartInfo
