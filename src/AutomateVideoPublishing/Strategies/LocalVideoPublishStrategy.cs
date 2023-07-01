@@ -20,7 +20,6 @@ public class LocalVideoPublishStrategy : IWorkflowStrategy
                 if (consoleOutput != null)
                 {
                     _broadcaster.OnNext(consoleOutput);
-                    mpeg4MetadataReadCommand.Execute(context);
                 }
             },
             exception =>
@@ -31,7 +30,5 @@ public class LocalVideoPublishStrategy : IWorkflowStrategy
         );
 
         mpeg4MetadataReadCommand.Execute(context);
-
-        _broadcaster.OnCompleted();
     }
 }
