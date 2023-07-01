@@ -93,7 +93,7 @@ public class MetadataTransferCommand : ICommand<CombinedMetadataTransferResult>
                 ? quickTimeMetadataContainer.YearByFilename.Value
                 : (uint?)null;
 
-            // Übertrage die Metadatenänderungen auf die Zieldatei und speichere die Datei
+            // Übertrage die Metadatenänderungen auf die Zieldatei
             if (descriptionTransferred != null)
             {
                 mpeg4TagLibFile.Tag.Description = descriptionTransferred;
@@ -105,8 +105,9 @@ public class MetadataTransferCommand : ICommand<CombinedMetadataTransferResult>
             }
 
             // Setze Apple Tag (todo: wenn vollständig funktioniert)
-            // SetReleaseDate(mpeg4TagLibFile, new DateTime(2024, 02, 24));
+            SetReleaseDate(mpeg4TagLibFile, new DateTime(2024, 02, 24));
 
+            // speichere die Datei
             mpeg4TagLibFile.Save();
             return Result.Success();
         }
@@ -149,8 +150,5 @@ public class MetadataTransferCommand : ICommand<CombinedMetadataTransferResult>
         string releaseDateText = releaseDate.ToString("yyyy");
         tags.SetText(releaseDateTagName, releaseDateText);
     }
-
-
-
 
 }
