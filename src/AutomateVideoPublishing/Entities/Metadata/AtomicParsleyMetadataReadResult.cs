@@ -8,7 +8,7 @@ public class AtomicParsleyMetadataReadResult
     public IReadOnlyList<string> Lines => lines.AsReadOnly();
     private AtomicParsleyMetadataReadResult(FileInfo fileInfo) => FileInfo = fileInfo;
 
-    public static Result<AtomicParsleyMetadataReadResult> Create(FileInfo fileInfo, List<string> lines)
+    public static Result<AtomicParsleyMetadataReadResult> Create(FileInfo fileInfo)
     {
         if (!fileInfo.Exists)
         {
