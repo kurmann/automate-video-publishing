@@ -50,7 +50,7 @@ public class WriteMetadataToTextFileCommand : ICommand<FileInfo>
         try
         {
             var txtFileName = Path.ChangeExtension(fileInfo.FullName, ".txt");
-            using var fileStream = new FileStream(txtFileName, FileMode.Append, FileAccess.Write);
+            using var fileStream = new FileStream(txtFileName, FileMode.Create, FileAccess.Write);
             using var streamWriter = new StreamWriter(fileStream);
 
             foreach (var line in lines)
@@ -58,13 +58,16 @@ public class WriteMetadataToTextFileCommand : ICommand<FileInfo>
                 await streamWriter.WriteLineAsync(line);
             }
 
-            return new FileInfo(txtFileName);
+            await streamWriter.FlushAsync();
+
+            return Result.Success(new FileInfo(txtFileName));
         }
         catch (Exception ex)
         {
             return Result.Failure<FileInfo>(ex.Message);
         }
     }
+
 
 
 }
