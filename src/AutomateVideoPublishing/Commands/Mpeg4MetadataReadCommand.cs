@@ -15,7 +15,7 @@ public class Mpeg4MetadataReadCommand : ICommand<string>
     {
         foreach (var fileInfo in context.PublishedMpeg4Directory.Mpeg4Files)
         {
-            var atomicParsleyReadCommand = new AtomicParsleyCommand(fileInfo.FullName).ForReading();
+            var atomicParsleyReadCommand = new AtomicParsleyCommand(fileInfo.FullName).ForReading().WithMetadata();
             var consoleOutput = RunAtomicParsley(atomicParsleyReadCommand);
             _broadcaster.OnNext(consoleOutput);
         }
@@ -32,11 +32,11 @@ public class Mpeg4MetadataReadCommand : ICommand<string>
             RedirectStandardError = true,
             UseShellExecute = false,
             CreateNoWindow = true,
-            Arguments = $"-c \"\\\"{atomicParsleyReadCommand}\\\"\""
+            Arguments = $"-c \"{atomicParsleyReadCommand.ToString().Replace("\"", "\\\"")}\""
         };
 
         var process = Process.Start(startInfo);
-        if (process == null) 
+        if (process == null)
         {
             throw new Exception("Initialized process for AtomicParsley is null");
         }

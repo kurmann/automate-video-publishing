@@ -30,7 +30,7 @@ public class AtomicParsleyReadCommand : IAtomicParsleyCommand
     public AtomicParsleyReadCommand(string filePath, string atomicParsleyPath = "AtomicParsley")
     {
         this.atomicParsleyPath = atomicParsleyPath;
-        arguments.Add(filePath);
+        arguments.Add("\"" + filePath + "\"");
     }
 
     public AtomicParsleyReadCommand WithMetadata()
@@ -52,7 +52,7 @@ public class AtomicParsleyWriteCommand : IAtomicParsleyCommand
     public AtomicParsleyWriteCommand(string filePath, string atomicParsleyPath = "AtomicParsley")
     {
         this.atomicParsleyPath = atomicParsleyPath;
-        arguments.Add(filePath);
+        arguments.Add("\"" + filePath + "\"");
     }
 
     public AtomicParsleyWriteCommand WithDescription(string description)
@@ -82,7 +82,7 @@ public class AtomicParsleyWriteCommand : IAtomicParsleyCommand
         return this;
     }
 
-    public override string ToString() => $"{atomicParsleyPath} {string.Join(" ", arguments)}".Replace("\"", "\\\"");
+    public override string ToString() => $"{atomicParsleyPath} {string.Join(" ", arguments)}";
 
     public static implicit operator string(AtomicParsleyWriteCommand cmd) => cmd.ToString();
 }
