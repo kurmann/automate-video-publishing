@@ -12,8 +12,8 @@ public class LocalVideoPublishStrategy : IWorkflowStrategy
 
     public void Execute(WorkflowContext context)
     {
-        var atomicParsleyRunCommand = new AtomicParsleyRunCommand();
-        var mmeg4MetadataReadCommand = new Mpeg4MetadataReadCommand(atomicParsleyRunCommand);
+        var atomicParsleyCommand = new AtomicParsleyReadMetadataCommand();
+        var mmeg4MetadataReadCommand = new Mpeg4MetadataReadCommand(atomicParsleyCommand);
         var writeMetadataToTextFileCommand = new WriteMetadataToTextFileCommand(mmeg4MetadataReadCommand);
 
         writeMetadataToTextFileCommand.WhenDataAvailable.Subscribe(

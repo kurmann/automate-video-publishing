@@ -7,7 +7,7 @@ namespace AutomateVideoPublishing.Commands;
 /// <summary>
 /// Führt den AtomicParsley-Befehl aus und übermittelt die Zeilenausgabe an ein Observable.
 /// </summary>
-public class AtomicParsleyRunCommand
+public class AtomicParsleyReadMetadataCommand
 {
     private readonly Subject<string> _subject = new Subject<string>();
 

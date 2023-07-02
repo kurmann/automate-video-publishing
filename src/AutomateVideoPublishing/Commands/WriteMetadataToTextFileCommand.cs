@@ -49,6 +49,9 @@ public class WriteMetadataToTextFileCommand : ICommand<FileInfo>
     {
         try
         {
+            // test
+            var metadata = Mpeg4MetadataCollection.Create(lines);
+
             var txtFileName = Path.ChangeExtension(fileInfo.FullName, ".txt");
             using var fileStream = new FileStream(txtFileName, FileMode.Create, FileAccess.Write);
             using var streamWriter = new StreamWriter(fileStream);
@@ -67,7 +70,4 @@ public class WriteMetadataToTextFileCommand : ICommand<FileInfo>
             return Result.Failure<FileInfo>(ex.Message);
         }
     }
-
-
-
 }
