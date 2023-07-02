@@ -27,7 +27,7 @@ public class CollectMetadataToUpdateCommand : ICommand<UpdateMetadataBaseData>
             var metadataCollection = metadataCollectionResult.Value;
 
             string? description = metadataCollection.Metadata.GetValueOrDefault("©des");
-            var baseDataResult = UpdateMetadataBaseData.Create(description, metadataReadResult.FileInfo.Name);
+            var baseDataResult = UpdateMetadataBaseData.Create(description, metadataReadResult.FileInfo.FullName);
 
             if (baseDataResult.IsFailure)
             {
