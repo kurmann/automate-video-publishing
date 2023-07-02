@@ -4,9 +4,9 @@ namespace AutomateVideoPublishing.Managers;
 
 public class ProcessManager
 {
-    public void StartNewProcess(string command, string arguments, IObserver<string> outputObserver)
+    public void StartNewProcess(string command, string? arguments, IObserver<string> outputObserver)
     {
-        var psi = new ProcessStartInfo(command, arguments)
+        var psi = new ProcessStartInfo(command, arguments ?? "")
         {
             RedirectStandardOutput = true,
             UseShellExecute = false,
