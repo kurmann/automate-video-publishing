@@ -79,6 +79,19 @@ public class UpdateMetadataResult
     public Maybe<DateTime> Date { get; }
     public Maybe<string> Description { get; }
 
+    /// <summary>
+    /// Eine Zusammenfassung der Aktualisierung der Metadaten.
+    /// </summary>
+    public string SummaryMessage 
+    { 
+        get 
+        {
+            var datePart = Date.HasValue ? $"Date updated to {Date.Value:yyyy-MM-dd HH:mm:ss}" : "Date not updated";
+            var descPart = Description.HasValue ? $", Description updated to {Description.Value}" : ", Description not updated";
+            return $"In the file {FileName}, " + datePart + descPart;
+        }
+    }
+
     private UpdateMetadataResult(string fileName, Maybe<DateTime> date, Maybe<string> description)
     {
         FileName = fileName;
