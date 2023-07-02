@@ -47,7 +47,7 @@ public class UpdateMetadataCommand : ICommand<UpdateMetadataResult>
                     return;
                 }
 
-                _processManager.StartNewProcess("AtomicParsley", dayArgumentsResult.Value.Arguments, Observer.Create<string>(Console.WriteLine));
+                _processManager.StartNewProcess("AtomicParsley", dayArgumentsResult.Value.Arguments.ToString(), Observer.Create<string>(Console.WriteLine));
             }
 
             if (metadataBaseData.Description.HasValue)
@@ -59,7 +59,7 @@ public class UpdateMetadataCommand : ICommand<UpdateMetadataResult>
                     return;
                 }
 
-                _processManager.StartNewProcess("AtomicParsley", descriptionArgumentsResult.Value.Arguments, Observer.Create<string>(Console.WriteLine));
+                _processManager.StartNewProcess("AtomicParsley", descriptionArgumentsResult.Value.Arguments.ToString(), Observer.Create<string>(Console.WriteLine));
             }
 
             var result = UpdateMetadataResult.Create(metadataBaseData.FileInfo.FullName, metadataBaseData.Date, metadataBaseData.Description);

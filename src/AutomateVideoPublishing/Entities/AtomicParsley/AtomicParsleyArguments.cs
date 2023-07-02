@@ -26,7 +26,7 @@ public class AtomicParsleyArguments
         return this;
     }
 
-    public string Build => _arguments.ToString().Trim();
+    public override string ToString() => _arguments.ToString().Trim();
 
-    public static implicit operator string?(AtomicParsleyArguments builder) => builder.ToString();
+    public static implicit operator string?(AtomicParsleyArguments arguments) => arguments.ToString();
 }

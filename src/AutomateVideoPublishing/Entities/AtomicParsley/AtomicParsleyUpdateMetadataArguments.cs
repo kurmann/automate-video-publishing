@@ -44,6 +44,7 @@ public class AtomicParsleyUpdateMetadataArguments
         return new AtomicParsleyUpdateMetadataArguments(arguments);
     }
 
+    public override string ToString() => Arguments.ToString();
 
     public static implicit operator string?(AtomicParsleyUpdateMetadataArguments command) => command.Arguments.ToString();
 }

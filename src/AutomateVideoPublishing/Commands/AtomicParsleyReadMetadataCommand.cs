@@ -21,7 +21,7 @@ namespace AutomateVideoPublishing.Commands
                                 .AddFilePath(filePath)
                                 .AddOption("-t");
 
-            _processManager.StartNewProcess(_atomicParsleyPath, arguments.Build, _subject);
+            _processManager.StartNewProcess(_atomicParsleyPath, arguments.ToString(), _subject);
         }
     }
 }
