@@ -1,6 +1,5 @@
 using AutomateVideoPublishing.Managers;
 using AutomateVideoPublishing.Entities.AtomicParsley;
-using System;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 
