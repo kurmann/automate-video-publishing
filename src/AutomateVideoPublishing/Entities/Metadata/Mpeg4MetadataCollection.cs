@@ -5,10 +5,9 @@ namespace AutomateVideoPublishing.Entities.Metadata;
 
 public class Mpeg4MetadataCollection
 {
-    private Dictionary<string, string?> _metadata = new();
     private readonly Dictionary<string, string?> atoms;
 
-    public IReadOnlyDictionary<string, string?> Metadata => _metadata;
+    public IReadOnlyDictionary<string, string?> Metadata => atoms.AsReadOnly();
 
     private Mpeg4MetadataCollection(Dictionary<string, string?> atoms) => this.atoms = atoms;
 
