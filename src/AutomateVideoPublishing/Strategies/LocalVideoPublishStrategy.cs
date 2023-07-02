@@ -15,13 +15,14 @@ public class LocalVideoPublishStrategy : IWorkflowStrategy
         var atomicParsleyCommand = new AtomicParsleyReadMetadataCommand();
         var mmeg4MetadataReadCommand = new Mpeg4MetadataReadCommand(atomicParsleyCommand);
         var writeMetadataToTextFileCommand = new WriteMetadataToTextFileCommand(mmeg4MetadataReadCommand);
+        var updateMetadataCommand = new UpdateMetadataCommand(new CollectMetadataToUpdateCommand(mmeg4MetadataReadCommand));
 
         writeMetadataToTextFileCommand.WhenDataAvailable.Subscribe(
             fileInfo =>
             {
                 if (fileInfo != null)
                 {
-                    _broadcaster.OnNext($"Metdata written to file: {fileInfo.FullName}");
+                    _broadcaster.OnNext($"Read metdata written to file: {fileInfo.FullName}");
                 }
             },
             exception =>
@@ -31,6 +32,22 @@ public class LocalVideoPublishStrategy : IWorkflowStrategy
             }
         );
 
-        writeMetadataToTextFileCommand.Execute(context);
+        updateMetadataCommand.WhenDataAvailable.Subscribe(
+            updateMetadataResult =>
+            {
+                if (updateMetadataResult != null)
+                {
+                    _broadcaster.OnNext($"Metdata updated: {updateMetadataResult.SummaryMessage}");
+                }
+            },
+            exception =>
+            {
+                // Handle any error
+                _broadcaster.OnError(exception);
+            }
+        );
+
+        // writeMetadataToTextFileCommand.Execute(context);
+        updateMetadataCommand.Execute(context);
     }
 }
