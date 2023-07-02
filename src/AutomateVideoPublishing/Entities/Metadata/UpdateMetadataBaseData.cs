@@ -32,8 +32,13 @@ public class UpdateMetadataBaseData : ValueObject
     /// <param name="description">Die Beschreibung der Metadaten.</param>
     /// <param name="filename">Der Dateiname, aus dem das Datum extrahiert werden soll.</param>
     /// <returns>Eine Instanz der UpdateMetadataBaseData-Klasse.</returns>
-    public static Result<UpdateMetadataBaseData> Create(string description, string filename)
+    public static Result<UpdateMetadataBaseData> Create(string? description, string? filename)
     {
+        if (string.IsNullOrWhiteSpace(filename))
+        {
+            return Result.Failure<UpdateMetadataBaseData>("File name cannot be empty to collect metadata to update");
+        }
+
         var maybeDescription = string.IsNullOrWhiteSpace(description) ? Maybe<string>.None : Maybe<string>.From(description);
         var maybeDate = ParseDateFromFilename(filename);
 
