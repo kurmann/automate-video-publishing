@@ -21,25 +21,29 @@ public class AtomicParsleyUpdateMetadataArguments
         return new AtomicParsleyUpdateMetadataArguments(arguments);
     }
 
-    public static Result<AtomicParsleyUpdateMetadataArguments> CreateOverwriteDay(string filePath, string day)
+    public static Result<AtomicParsleyUpdateMetadataArguments> CreateOverwriteDay(string filePath, DateTime day)
     {
-        if (string.IsNullOrEmpty(filePath) || string.IsNullOrEmpty(day))
+        if (string.IsNullOrEmpty(filePath))
         {
-            return Result.Failure<AtomicParsleyUpdateMetadataArguments>("FilePath and Day should not be null or empty.");
+            return Result.Failure<AtomicParsleyUpdateMetadataArguments>("FilePath should not be null or empty.");
         }
+
+        // Convert the DateTime to the required format (ISO 8601)
+        string dayStr = day.ToString("yyyy-MM-ddTHH:mm:ssZ");
 
         var removeDayArgs = new AtomicParsleyArguments()
                                 .AddFilePath(filePath)
                                 .AddOption("--overWrite")
                                 .AddTag("manualAtomRemove", "moov.udta.meta.ilst.©day");
-        
+
         var arguments = new AtomicParsleyArguments()
                             .AddFilePath(filePath)
                             .AddOption("--overWrite")
-                            .AddTag("year", day);
+                            .AddTag("year", dayStr);
 
         return new AtomicParsleyUpdateMetadataArguments(arguments);
     }
+
 
     public static implicit operator string?(AtomicParsleyUpdateMetadataArguments command) => command.Arguments.ToString();
 }
