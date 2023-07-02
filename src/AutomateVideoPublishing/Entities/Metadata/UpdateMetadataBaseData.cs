@@ -20,10 +20,16 @@ public class UpdateMetadataBaseData : ValueObject
     /// </summary>
     public Maybe<DateTime> Date { get; }
 
-    private UpdateMetadataBaseData(Maybe<string> description, Maybe<DateTime> date)
+    /// <summary>
+    /// Die FileInfo der Datei, aus der die Metadaten extrahiert wurden.
+    /// </summary>
+    public FileInfo FileInfo { get; }
+
+    private UpdateMetadataBaseData(Maybe<string> description, Maybe<DateTime> date, FileInfo file)
     {
         Description = description;
         Date = date;
+        FileInfo = file;
     }
 
     /// <summary>
@@ -31,18 +37,24 @@ public class UpdateMetadataBaseData : ValueObject
     /// </summary>
     /// <param name="description">Die Beschreibung der Metadaten.</param>
     /// <param name="filename">Der Dateiname, aus dem das Datum extrahiert werden soll.</param>
-    /// <returns>Eine Instanz der UpdateMetadataBaseData-Klasse.</returns>
+    /// <returns>Eine Instanz der UpdateMetadataBaseData-Klasse oder einen Fehler, wenn die Datei nicht existiert.</returns>
     public static Result<UpdateMetadataBaseData> Create(string? description, string? filename)
     {
         if (string.IsNullOrWhiteSpace(filename))
         {
-            return Result.Failure<UpdateMetadataBaseData>("File name cannot be empty to collect metadata to update");
+            return Result.Failure<UpdateMetadataBaseData>("File name cannot be empty");
+        }
+
+        if (!File.Exists(filename))
+        {
+            return Result.Failure<UpdateMetadataBaseData>($"File {filename} non-existent to collect metadata to update");
         }
 
         var maybeDescription = string.IsNullOrWhiteSpace(description) ? Maybe<string>.None : Maybe<string>.From(description);
         var maybeDate = ParseDateFromFilename(filename);
+        var fileInfo = new FileInfo(filename);
 
-        return Result.Success(new UpdateMetadataBaseData(maybeDescription, maybeDate));
+        return Result.Success(new UpdateMetadataBaseData(maybeDescription, maybeDate, fileInfo));
     }
 
     private static Maybe<DateTime> ParseDateFromFilename(string filename)
@@ -62,5 +74,6 @@ public class UpdateMetadataBaseData : ValueObject
     {
         yield return Description.HasValue ? Description.Value : string.Empty;
         yield return Date.HasValue ? Date.Value : default(DateTime);
+        yield return FileInfo.FullName;
     }
 }
