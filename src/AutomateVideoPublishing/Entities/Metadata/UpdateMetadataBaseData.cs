@@ -8,7 +8,7 @@ namespace AutomateVideoPublishing.Entities;
 public class UpdateMetadataBaseData : ValueObject
 {
     // Der reguläre Ausdruck erkennt das ISO-Datum am Anfang des Dateinamens.
-    private static readonly Regex DateRegex = new Regex(@"^(\d{4})(0[1-9]|1[0-2])(0[1-9]|[12][0-9]|3[01])");
+    private static readonly Regex DateRegex = new Regex(@"(\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])");
 
     /// <summary>
     /// Die Beschreibung der Metadaten. Wenn der Wert None ist, war die Beschreibung leer oder nur Leerzeichen.
