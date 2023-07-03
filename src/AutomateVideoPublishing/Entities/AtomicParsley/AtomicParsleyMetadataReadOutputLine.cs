@@ -20,4 +20,6 @@ public class AtomicParsleyMetadataReadOutputLine : ValueObject
     {
         yield return Value;
     }
+
+    public static implicit operator string(AtomicParsleyMetadataReadOutputLine outputLine) => outputLine.Value;
 }
