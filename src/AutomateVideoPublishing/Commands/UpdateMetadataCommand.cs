@@ -11,14 +11,21 @@ namespace AutomateVideoPublishing.Commands;
 /// </summary>
 public class UpdateMetadataCommand : ICommand<UpdateMetadataResult>
 {
-    private readonly Subject<UpdateMetadataResult> _broadcaster = new();
+    private readonly Subject<UpdateMetadataResult> _broadcaster = new(); // Subject für die Info der bearbeiteten Dateien
+    private readonly Subject<string> _consoleOutputSubject = new();  // Subject für die Konsolenausgabe von AtomicParsley
+
     private readonly CollectMetadataToUpdateCommand _collectMetadataToUpdateCommand;
     private readonly ProcessManager _processManager;
     
     /// <summary>
-    /// Liefert Daten, sobald sie verfügbar sind.
+    /// Liefert Daten zu bearbeiteten Dateien, sobald sie verfügbar sind.
     /// </summary>
     public IObservable<UpdateMetadataResult> WhenDataAvailable => _broadcaster.AsObservable();
+
+    /// <summary>
+    /// Liefert die Konsolenausgabe von AtomicParsley, sobald sie verfügbar ist.
+    /// </summary>
+    public IObservable<string> WhenConsoleOutputAvailable => _consoleOutputSubject.AsObservable();
 
     /// <summary>
     /// Erstellt eine neue Instanz des UpdateMetadataCommand.
@@ -40,26 +47,32 @@ public class UpdateMetadataCommand : ICommand<UpdateMetadataResult>
         {
             if (metadataBaseData.Date.HasValue)
             {
-                var dayArgumentsResult = AtomicParsleyUpdateMetadataArguments.CreateOverwriteDay(metadataBaseData.FileInfo.FullName, metadataBaseData.Date.Value);
+                string fileName = metadataBaseData.FileInfo.FullName;
+                var dayArgumentsResult = AtomicParsleyUpdateMetadataArguments.CreateOverwriteDay(fileName, metadataBaseData.Date.Value);
                 if (dayArgumentsResult.IsFailure)
                 {
-                    _broadcaster.OnError(new Exception($"Fehler beim Erstellen der AtomicParsley-Argumente für das Tag 'day': {dayArgumentsResult.Error}"));
+                    string message = $"Fehler beim Erstellen der AtomicParsley-Argumente für das Tag 'day': {dayArgumentsResult.Error}";
+                    _broadcaster.OnError(new Exception(message));
                     return;
                 }
 
-                _processManager.StartNewProcess("AtomicParsley", dayArgumentsResult.Value.Arguments.ToString(), Observer.Create<string>(Console.WriteLine));
+                var outputObserver = CreateProcessOutputObserver("AtomicParsley Day Update");
+                _processManager.StartNewProcess("AtomicParsley", dayArgumentsResult.Value.Arguments, outputObserver);
             }
 
             if (metadataBaseData.Description.HasValue)
             {
-                var descriptionArgumentsResult = AtomicParsleyUpdateMetadataArguments.CreateOverwriteDescription(metadataBaseData.FileInfo.FullName, metadataBaseData.Description.Value);
+                string fileName = metadataBaseData.FileInfo.FullName;
+                var descriptionArgumentsResult = AtomicParsleyUpdateMetadataArguments.CreateOverwriteDescription(fileName, metadataBaseData.Description.Value);
                 if (descriptionArgumentsResult.IsFailure)
                 {
-                    _broadcaster.OnError(new Exception($"Fehler beim Erstellen der AtomicParsley-Argumente für das Tag 'description': {descriptionArgumentsResult.Error}"));
+                    string message = $"Fehler beim Erstellen der AtomicParsley-Argumente für das Tag 'description': {descriptionArgumentsResult.Error}";
+                    _broadcaster.OnError(new Exception(message));
                     return;
                 }
 
-                _processManager.StartNewProcess("AtomicParsley", descriptionArgumentsResult.Value.Arguments.ToString(), Observer.Create<string>(Console.WriteLine));
+                var outputObserver = CreateProcessOutputObserver("AtomicParsley Description Update");
+                _processManager.StartNewProcess("AtomicParsley", descriptionArgumentsResult.Value.Arguments, outputObserver);
             }
 
             var result = UpdateMetadataResult.Create(metadataBaseData.FileInfo.FullName, metadataBaseData.Date, metadataBaseData.Description);
@@ -67,6 +80,18 @@ public class UpdateMetadataCommand : ICommand<UpdateMetadataResult>
         });
 
         _collectMetadataToUpdateCommand.Execute(context);
+    }
+
+    private IObserver<string> CreateProcessOutputObserver(string processName)
+    {
+        return Observer.Create<string>(output =>
+        {
+            // Schreiben Sie die Ausgabe auf die Konsole
+            Console.WriteLine($"{processName}: {output}");
+            
+            // Senden Sie die Ausgabe an das _consoleOutputSubject
+            _consoleOutputSubject.OnNext(output);
+        });
     }
 }
 

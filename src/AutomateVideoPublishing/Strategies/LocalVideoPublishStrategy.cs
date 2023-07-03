@@ -32,12 +32,29 @@ public class LocalVideoPublishStrategy : IWorkflowStrategy
             }
         );
 
+        // Abonnieren der aktualisierten Dateien
         updateMetadataCommand.WhenDataAvailable.Subscribe(
             updateMetadataResult =>
             {
                 if (updateMetadataResult != null)
                 {
                     _broadcaster.OnNext($"Metdata updated: {updateMetadataResult.SummaryMessage}");
+                }
+            },
+            exception =>
+            {
+                // Handle any error
+                _broadcaster.OnError(exception);
+            }
+        );
+
+        // Abonnieren Sie auf Konsolenausgaben
+        updateMetadataCommand.WhenConsoleOutputAvailable.Subscribe(
+            consoleOutput =>
+            {
+                if (!string.IsNullOrEmpty(consoleOutput))
+                {
+                    _broadcaster.OnNext($"AtomicParsley output: {consoleOutput}");
                 }
             },
             exception =>
