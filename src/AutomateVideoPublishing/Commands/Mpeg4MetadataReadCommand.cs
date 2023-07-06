@@ -9,11 +9,11 @@ namespace AutomateVideoPublishing.Commands;
 public class Mpeg4MetadataReadCommand : ICommand<AtomicParsleyMetadataReadResult>
 {
     private readonly Subject<AtomicParsleyMetadataReadResult> _broadcaster = new();
-    private readonly AtomicParsleyReadMetadataCommand atomicParsleyCommand;
+    private readonly AtomicParsleyReadMetadataCommand command;
 
     public IObservable<AtomicParsleyMetadataReadResult> WhenDataAvailable => _broadcaster.AsObservable();
 
-    public Mpeg4MetadataReadCommand(AtomicParsleyReadMetadataCommand atomicParsleyRunCommand) => this.atomicParsleyCommand = atomicParsleyRunCommand;
+    public Mpeg4MetadataReadCommand(AtomicParsleyReadMetadataCommand command) => this.command = command;
 
     public void Execute(WorkflowContext context)
     {
@@ -24,7 +24,7 @@ public class Mpeg4MetadataReadCommand : ICommand<AtomicParsleyMetadataReadResult
         {
             var readResult = AtomicParsleyMetadataReadResult.Create(fileInfo);
 
-            atomicParsleyCommand.Lines.Subscribe(
+            command.Lines.Subscribe(
                 line => readResult.AddLine(line),
                 () =>
                 {
@@ -35,7 +35,7 @@ public class Mpeg4MetadataReadCommand : ICommand<AtomicParsleyMetadataReadResult
                         _broadcaster.OnCompleted();
                     }
                 });
-            atomicParsleyCommand.Run(fileInfo.FullName);
+            command.Run(fileInfo.FullName);
         }
     }
 }
