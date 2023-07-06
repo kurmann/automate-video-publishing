@@ -12,7 +12,6 @@ namespace AutomateVideoPublishing.Commands;
 public class UpdateMetadataCommand : ICommand<UpdateMetadataResult>
 {
     private readonly Subject<UpdateMetadataResult> _broadcaster = new(); // Subject für die Info der bearbeiteten Dateien
-    private readonly Subject<AtomicParsleyMetadataReadOutputLine> _consoleOutputSubject = new();  // Subject für die Konsolenausgabe von AtomicParsley
     private readonly CollectMetadataToUpdateCommand _collectMetadataToUpdateCommand;
     private readonly ProcessManager _processManager;
 
@@ -20,11 +19,6 @@ public class UpdateMetadataCommand : ICommand<UpdateMetadataResult>
     /// Liefert Daten zu bearbeiteten Dateien, sobald sie verfügbar sind.
     /// </summary>
     public IObservable<UpdateMetadataResult> WhenDataAvailable => _broadcaster.AsObservable();
-
-    /// <summary>
-    /// Liefert die Konsolenausgabe von AtomicParsley, sobald sie verfügbar ist.
-    /// </summary>
-    public IObservable<AtomicParsleyMetadataReadOutputLine> WhenConsoleOutputAvailable => _consoleOutputSubject.AsObservable();
 
     /// <summary>
     /// Erstellt eine neue Instanz des UpdateMetadataCommand.
@@ -49,8 +43,7 @@ public class UpdateMetadataCommand : ICommand<UpdateMetadataResult>
                 string fileName = metadataBaseData.FileInfo.FullName;
                 var dayArguments = AtomicParsleyUpdateMetadataArguments.CreateOverwriteDay(fileName, metadataBaseData.Date.Value);
 
-                var outputObserver = CreateProcessOutputObserver("AtomicParsley Day Update");
-                _processManager.StartNewProcess("AtomicParsley", dayArguments.Arguments, outputObserver);
+                _processManager.StartNewProcess("AtomicParsley", dayArguments.Arguments);
             }
 
             if (metadataBaseData.Description.HasValue)
@@ -58,8 +51,7 @@ public class UpdateMetadataCommand : ICommand<UpdateMetadataResult>
                 string fileName = metadataBaseData.FileInfo.FullName;
                 var descriptionArguments = AtomicParsleyUpdateMetadataArguments.CreateOverwriteDescription(fileName, metadataBaseData.Description.Value);
 
-                var outputObserver = CreateProcessOutputObserver("AtomicParsley Description Update");
-                _processManager.StartNewProcess("AtomicParsley", descriptionArguments.Arguments, outputObserver);
+                _processManager.StartNewProcess("AtomicParsley", descriptionArguments.Arguments);
             }
 
             var result = UpdateMetadataResult.Create(metadataBaseData.FileInfo.FullName, metadataBaseData.Date, metadataBaseData.Description);
@@ -68,20 +60,6 @@ public class UpdateMetadataCommand : ICommand<UpdateMetadataResult>
 
         _collectMetadataToUpdateCommand.Execute(context);
     }
-
-    private IObserver<string> CreateProcessOutputObserver(string processName)
-    {
-        return Observer.Create<string>(output =>
-        {
-            // Schreiben Sie die Ausgabe auf die Konsole
-            Console.WriteLine($"{processName}: {output}");
-
-            // Senden Sie die Ausgabe an das _consoleOutputSubject
-            var outputLine = AtomicParsleyMetadataReadOutputLine.Create(output);
-            _consoleOutputSubject.OnNext(outputLine);
-        });
-    }
-
 }
 
 /// <summary>

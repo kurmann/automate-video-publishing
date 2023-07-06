@@ -48,19 +48,6 @@ public class LocalVideoPublishStrategy : IWorkflowStrategy
             }
         );
 
-        // Abonnieren Sie auf Konsolenausgaben
-        updateMetadataCommand.WhenConsoleOutputAvailable.Subscribe(
-            consoleOutput =>
-            {
-                _broadcaster.OnNext($"AtomicParsley output: {consoleOutput.Value}");
-            },
-            exception =>
-            {
-                // Handle any error
-                _broadcaster.OnError(exception);
-            }
-        );
-
         // writeMetadataToTextFileCommand.Execute(context);
         updateMetadataCommand.Execute(context);
     }
