@@ -1,5 +1,5 @@
-using System.Text;
 using System.Text.RegularExpressions;
+using AutomateVideoPublishing.Entities.AtomicParsley;
 
 namespace AutomateVideoPublishing.Entities.Metadata;
 
@@ -11,7 +11,7 @@ public class Mpeg4MetadataCollection
 
     private Mpeg4MetadataCollection(Dictionary<string, string?> atoms) => this.atoms = atoms;
 
-    public static Result<Mpeg4MetadataCollection> Create(IEnumerable<string> lines)
+    public static Result<Mpeg4MetadataCollection> Create(IEnumerable<AtomicParsleyMetadataReadOutputLine> lines)
     {
         var atoms = new Dictionary<string, string?>();
         string lastAtom = string.Empty;
@@ -37,9 +37,9 @@ public class Mpeg4MetadataCollection
         return Result.Success(new Mpeg4MetadataCollection(atoms));
     }
 
-    private static KeyValuePair<string, string?>? GetParsedAtomicParsleyLine(string line)
+    private static KeyValuePair<string, string?>? GetParsedAtomicParsleyLine(AtomicParsleyMetadataReadOutputLine line)
     {
-        var match = Regex.Match(line, @"Atom ""(.*?)"" contains: (.*)");
+        var match = Regex.Match(line.Value, @"Atom ""(.*?)"" contains: (.*)");
 
         if (match.Success)
         {

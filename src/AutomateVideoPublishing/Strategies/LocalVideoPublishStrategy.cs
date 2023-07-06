@@ -52,10 +52,7 @@ public class LocalVideoPublishStrategy : IWorkflowStrategy
         updateMetadataCommand.WhenConsoleOutputAvailable.Subscribe(
             consoleOutput =>
             {
-                if (!string.IsNullOrEmpty(consoleOutput))
-                {
-                    _broadcaster.OnNext($"AtomicParsley output: {consoleOutput}");
-                }
+                _broadcaster.OnNext($"AtomicParsley output: {consoleOutput.Value}");
             },
             exception =>
             {

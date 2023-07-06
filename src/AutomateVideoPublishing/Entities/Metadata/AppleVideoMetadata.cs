@@ -20,7 +20,7 @@ public class AppleVideoMetadata
         // Versuchen Sie, jede Zeile zu analysieren und in den entsprechenden Metadaten zu speichern
         foreach (var line in atomicParsleyMetadata.Lines)
         {
-            if (TryParseAtomicParsleyResult(line, out var atom, out var content))
+            if (TryParseAtomicParsleyResult(line.Value, out var atom, out var content))
             {
                 switch (atom)
                 {

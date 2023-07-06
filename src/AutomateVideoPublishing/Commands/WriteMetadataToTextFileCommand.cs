@@ -1,5 +1,6 @@
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using AutomateVideoPublishing.Entities.AtomicParsley;
 
 namespace AutomateVideoPublishing.Commands;
 
@@ -45,7 +46,7 @@ public class WriteMetadataToTextFileCommand : ICommand<FileInfo>
     }
 
 
-    private static async Task<Result<FileInfo>> WriteLinesAsync(FileInfo fileInfo, IReadOnlyList<string> lines)
+    private static async Task<Result<FileInfo>> WriteLinesAsync(FileInfo fileInfo, IEnumerable<AtomicParsleyMetadataReadOutputLine> lines)
     {
         try
         {
@@ -58,7 +59,7 @@ public class WriteMetadataToTextFileCommand : ICommand<FileInfo>
 
             foreach (var line in lines)
             {
-                await streamWriter.WriteLineAsync(line);
+                await streamWriter.WriteLineAsync(line.Value);
             }
 
             await streamWriter.FlushAsync();

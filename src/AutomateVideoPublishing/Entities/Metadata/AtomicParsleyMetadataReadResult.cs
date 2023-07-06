@@ -1,22 +1,16 @@
+using AutomateVideoPublishing.Entities.AtomicParsley;
+
 namespace AutomateVideoPublishing.Entities.Metadata;
 
 public class AtomicParsleyMetadataReadResult
 {
-    private List<string> lines = new List<string>();
+    private List<AtomicParsleyMetadataReadOutputLine> lines = new ();
 
     public FileInfo FileInfo { get; }
-    public IReadOnlyList<string> Lines => lines.AsReadOnly();
+    public IReadOnlyList<AtomicParsleyMetadataReadOutputLine> Lines => lines.AsReadOnly();
     private AtomicParsleyMetadataReadResult(FileInfo fileInfo) => FileInfo = fileInfo;
 
-    public static Result<AtomicParsleyMetadataReadResult> Create(FileInfo fileInfo)
-    {
-        if (!fileInfo.Exists)
-        {
-            return Result.Failure<AtomicParsleyMetadataReadResult>($"File does not exist: {fileInfo.FullName}");
-        }
+    public static AtomicParsleyMetadataReadResult Create(FileInfo fileInfo) => new AtomicParsleyMetadataReadResult(fileInfo);
 
-        return Result.Success(new AtomicParsleyMetadataReadResult(fileInfo));
-    }
-
-    public void AddLine(string line) => lines.Add(line);
+    public void AddLine(AtomicParsleyMetadataReadOutputLine line) => lines.Add(line);
 }

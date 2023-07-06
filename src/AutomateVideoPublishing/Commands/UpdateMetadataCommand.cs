@@ -12,11 +12,10 @@ namespace AutomateVideoPublishing.Commands;
 public class UpdateMetadataCommand : ICommand<UpdateMetadataResult>
 {
     private readonly Subject<UpdateMetadataResult> _broadcaster = new(); // Subject für die Info der bearbeiteten Dateien
-    private readonly Subject<string> _consoleOutputSubject = new();  // Subject für die Konsolenausgabe von AtomicParsley
-
+    private readonly Subject<AtomicParsleyMetadataReadOutputLine> _consoleOutputSubject = new();  // Subject für die Konsolenausgabe von AtomicParsley
     private readonly CollectMetadataToUpdateCommand _collectMetadataToUpdateCommand;
     private readonly ProcessManager _processManager;
-    
+
     /// <summary>
     /// Liefert Daten zu bearbeiteten Dateien, sobald sie verfügbar sind.
     /// </summary>
@@ -25,7 +24,7 @@ public class UpdateMetadataCommand : ICommand<UpdateMetadataResult>
     /// <summary>
     /// Liefert die Konsolenausgabe von AtomicParsley, sobald sie verfügbar ist.
     /// </summary>
-    public IObservable<string> WhenConsoleOutputAvailable => _consoleOutputSubject.AsObservable();
+    public IObservable<AtomicParsleyMetadataReadOutputLine> WhenConsoleOutputAvailable => _consoleOutputSubject.AsObservable();
 
     /// <summary>
     /// Erstellt eine neue Instanz des UpdateMetadataCommand.
@@ -48,31 +47,19 @@ public class UpdateMetadataCommand : ICommand<UpdateMetadataResult>
             if (metadataBaseData.Date.HasValue)
             {
                 string fileName = metadataBaseData.FileInfo.FullName;
-                var dayArgumentsResult = AtomicParsleyUpdateMetadataArguments.CreateOverwriteDay(fileName, metadataBaseData.Date.Value);
-                if (dayArgumentsResult.IsFailure)
-                {
-                    string message = $"Fehler beim Erstellen der AtomicParsley-Argumente für das Tag 'day': {dayArgumentsResult.Error}";
-                    _broadcaster.OnError(new Exception(message));
-                    return;
-                }
+                var dayArguments = AtomicParsleyUpdateMetadataArguments.CreateOverwriteDay(fileName, metadataBaseData.Date.Value);
 
                 var outputObserver = CreateProcessOutputObserver("AtomicParsley Day Update");
-                _processManager.StartNewProcess("AtomicParsley", dayArgumentsResult.Value.Arguments, outputObserver);
+                _processManager.StartNewProcess("AtomicParsley", dayArguments.Arguments, outputObserver);
             }
 
             if (metadataBaseData.Description.HasValue)
             {
                 string fileName = metadataBaseData.FileInfo.FullName;
-                var descriptionArgumentsResult = AtomicParsleyUpdateMetadataArguments.CreateOverwriteDescription(fileName, metadataBaseData.Description.Value);
-                if (descriptionArgumentsResult.IsFailure)
-                {
-                    string message = $"Fehler beim Erstellen der AtomicParsley-Argumente für das Tag 'description': {descriptionArgumentsResult.Error}";
-                    _broadcaster.OnError(new Exception(message));
-                    return;
-                }
+                var descriptionArguments = AtomicParsleyUpdateMetadataArguments.CreateOverwriteDescription(fileName, metadataBaseData.Description.Value);
 
                 var outputObserver = CreateProcessOutputObserver("AtomicParsley Description Update");
-                _processManager.StartNewProcess("AtomicParsley", descriptionArgumentsResult.Value.Arguments, outputObserver);
+                _processManager.StartNewProcess("AtomicParsley", descriptionArguments.Arguments, outputObserver);
             }
 
             var result = UpdateMetadataResult.Create(metadataBaseData.FileInfo.FullName, metadataBaseData.Date, metadataBaseData.Description);
@@ -88,11 +75,13 @@ public class UpdateMetadataCommand : ICommand<UpdateMetadataResult>
         {
             // Schreiben Sie die Ausgabe auf die Konsole
             Console.WriteLine($"{processName}: {output}");
-            
+
             // Senden Sie die Ausgabe an das _consoleOutputSubject
-            _consoleOutputSubject.OnNext(output);
+            var outputLine = AtomicParsleyMetadataReadOutputLine.Create(output);
+            _consoleOutputSubject.OnNext(outputLine);
         });
     }
+
 }
 
 /// <summary>
@@ -107,9 +96,9 @@ public class UpdateMetadataResult
     /// <summary>
     /// Eine Zusammenfassung der Aktualisierung der Metadaten.
     /// </summary>
-    public string SummaryMessage 
-    { 
-        get 
+    public string SummaryMessage
+    {
+        get
         {
             var datePart = Date.HasValue ? $"Date updated to {Date.Value:yyyy-MM-dd HH:mm:ss}" : "Date not updated";
             var descPart = Description.HasValue ? $", Description updated to {Description.Value}" : ", Description not updated";
