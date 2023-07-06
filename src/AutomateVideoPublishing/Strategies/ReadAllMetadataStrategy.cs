@@ -7,20 +7,20 @@ namespace AutomateVideoPublishing.Strategies;
 public class ReadAllMetadataStrategy : IWorkflowStrategy
 {
     private readonly Subject<string> _broadcaster = new();
-    private readonly WriteJsonMetadataCommand _writeCommand;
+    private WriteMetadataToTextFileCommand _writeMetadataToTextFileCommand;
 
     public IObservable<string> WhenStatusUpdateAvailable => _broadcaster.AsObservable();
 
     public ReadAllMetadataStrategy()
     {
-        var quickTimeCommand = new QuickTimeMetadataReadCommand();
-        var mpeg4Command = new Mpeg4DirectoryMetadataReadCommand();
-        _writeCommand = new WriteJsonMetadataCommand(quickTimeCommand, mpeg4Command);
+        var atomicParsleyCommand =  new AtomicParsleyReadMetadataCommand();
+        var mpeg4MetadataReadCommand = new Mpeg4MetadataReadCommand(atomicParsleyCommand);
+        _writeMetadataToTextFileCommand = new WriteMetadataToTextFileCommand(mpeg4MetadataReadCommand);
     }
 
     public void Execute(WorkflowContext context)
     {
-        _writeCommand.WhenDataAvailable.Subscribe(
+        _writeMetadataToTextFileCommand.WhenDataAvailable.Subscribe(
             onNext: filepath => _broadcaster.OnNext($"New Json file created: {filepath}"),
             onError: ex => _broadcaster.OnError(ex),
             onCompleted: () => {
@@ -29,6 +29,6 @@ public class ReadAllMetadataStrategy : IWorkflowStrategy
             }
         );
 
-        _writeCommand.Execute(context);
+        _writeMetadataToTextFileCommand.Execute(context);
     }
 }

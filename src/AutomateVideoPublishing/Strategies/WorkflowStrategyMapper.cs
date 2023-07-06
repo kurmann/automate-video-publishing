@@ -20,9 +20,6 @@ public class WorkflowStrategyMapper
             case nameof(ReadAllMetadataStrategy):
                 strategy = new ReadAllMetadataStrategy();
                 break;
-            case nameof(VideoPublishAndArchiveStrategy):
-                strategy = new VideoPublishAndArchiveStrategy();
-                break;
             case nameof(LocalVideoPublishStrategy):
                 strategy = new LocalVideoPublishStrategy();
                 break;
