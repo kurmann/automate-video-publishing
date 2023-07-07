@@ -11,9 +11,9 @@ public class Mpeg4MetadataCollection
 
     public Maybe<string> Album => atoms.TryGetValue("©alb", out var album) && album != null ? Maybe<string>.From(album) : Maybe<string>.None;
 
-    public Maybe<string> Description => atoms.TryGetValue("©desc", out var description) && description != null ? Maybe<string>.From(description) : Maybe<string>.None;
+    public Maybe<string> Description => atoms.TryGetValue("©des", out var description) && description != null ? Maybe<string>.From(description) : Maybe<string>.None;
 
-    public Maybe<string> Name => atoms.TryGetValue("©name", out var name) && name != null ? Maybe<string>.From(name) : Maybe<string>.None;
+    public Maybe<string> Name => atoms.TryGetValue("©nam", out var name) && name != null ? Maybe<string>.From(name) : Maybe<string>.None;
 
     private Mpeg4MetadataCollection(Dictionary<string, string?> atoms) => this.atoms = atoms;
 
