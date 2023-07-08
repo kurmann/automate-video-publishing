@@ -1,5 +1,6 @@
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using AutomateVideoPublishing.Managers;
 
 namespace AutomateVideoPublishing.Commands;
 
@@ -9,11 +10,11 @@ namespace AutomateVideoPublishing.Commands;
 public class Mpeg4MetadataReadCommand : ICommand<AtomicParsleyMetadataReadResult>
 {
     private readonly Subject<AtomicParsleyMetadataReadResult> _broadcaster = new();
-    private readonly AtomicParsleyReadMetadataCommand command;
+    private readonly AtomicParsleyManager manager;
 
     public IObservable<AtomicParsleyMetadataReadResult> WhenDataAvailable => _broadcaster.AsObservable();
 
-    public Mpeg4MetadataReadCommand(AtomicParsleyReadMetadataCommand command) => this.command = command;
+    public Mpeg4MetadataReadCommand(AtomicParsleyManager atomicParsleyManager) => manager = atomicParsleyManager;
 
     public void Execute(WorkflowContext context)
     {
@@ -24,7 +25,7 @@ public class Mpeg4MetadataReadCommand : ICommand<AtomicParsleyMetadataReadResult
         {
             var readResult = AtomicParsleyMetadataReadResult.Create(fileInfo);
 
-            command.Lines.Subscribe(
+            manager.Lines.Subscribe(
                 line => readResult.AddLine(line),
                 () =>
                 {
@@ -35,7 +36,7 @@ public class Mpeg4MetadataReadCommand : ICommand<AtomicParsleyMetadataReadResult
                         _broadcaster.OnCompleted();
                     }
                 });
-            command.Run(fileInfo.FullName);
+            manager.Run(fileInfo.FullName);
         }
     }
 }

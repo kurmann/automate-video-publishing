@@ -1,6 +1,7 @@
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using AutomateVideoPublishing.Commands;
+using AutomateVideoPublishing.Managers;
 
 namespace AutomateVideoPublishing.Strategies;
 
@@ -13,7 +14,7 @@ public class ReadAllMetadataStrategy : IWorkflowStrategy
 
     public ReadAllMetadataStrategy()
     {
-        var atomicParsleyCommand =  new AtomicParsleyReadMetadataCommand();
+        var atomicParsleyCommand =  new AtomicParsleyManager();
         var mpeg4MetadataReadCommand = new Mpeg4MetadataReadCommand(atomicParsleyCommand);
         _writeMetadataToTextFileCommand = new WriteMetadataToTextFileCommand(mpeg4MetadataReadCommand);
     }

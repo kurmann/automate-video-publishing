@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Logging;
+
 namespace AutomateVideoPublishing.Strategies;
 
 public class WorkflowStrategyMapper
