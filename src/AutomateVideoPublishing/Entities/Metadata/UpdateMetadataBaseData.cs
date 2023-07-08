@@ -25,11 +25,17 @@ public class UpdateMetadataBaseData : ValueObject
     /// </summary>
     public FileInfo FileInfo { get; }
 
-    private UpdateMetadataBaseData(Maybe<string> description, Maybe<DateTime> date, FileInfo file)
+    /// <summary>
+    /// Die Sammlung der ausgelesenen Mpeg4-Metadaten.
+    /// </summary>
+    public Mpeg4MetadataCollection MetadataCollection { get; }
+
+    private UpdateMetadataBaseData(Maybe<string> description, Maybe<DateTime> date, FileInfo file, Mpeg4MetadataCollection metadataCollection)
     {
         Description = description;
         Date = date;
         FileInfo = file;
+        MetadataCollection = metadataCollection;
     }
 
     /// <summary>
@@ -38,7 +44,7 @@ public class UpdateMetadataBaseData : ValueObject
     /// <param name="description">Die Beschreibung der Metadaten.</param>
     /// <param name="filename">Der Dateiname, aus dem das Datum extrahiert werden soll.</param>
     /// <returns>Eine Instanz der UpdateMetadataBaseData-Klasse oder einen Fehler, wenn die Datei nicht existiert.</returns>
-    public static Result<UpdateMetadataBaseData> Create(string? description, string? filename)
+    public static Result<UpdateMetadataBaseData> Create(string? description, string? filename, Mpeg4MetadataCollection metadataCollection)
     {
         if (string.IsNullOrWhiteSpace(filename))
         {
@@ -54,7 +60,7 @@ public class UpdateMetadataBaseData : ValueObject
         var maybeDate = ParseDateFromFilename(filename);
         var fileInfo = new FileInfo(filename);
 
-        return Result.Success(new UpdateMetadataBaseData(maybeDescription, maybeDate, fileInfo));
+        return new UpdateMetadataBaseData(maybeDescription, maybeDate, fileInfo, metadataCollection);
     }
 
     private static Maybe<DateTime> ParseDateFromFilename(string filename)

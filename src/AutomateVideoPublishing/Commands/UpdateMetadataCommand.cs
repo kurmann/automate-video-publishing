@@ -10,50 +10,36 @@ namespace AutomateVideoPublishing.Commands;
 /// </summary>
 public class UpdateMetadataCommand : ICommand<UpdateMetadataResult>
 {
-    private readonly Subject<UpdateMetadataResult> _broadcaster = new(); // Subject für die Info der bearbeiteten Dateien
+    private readonly Subject<UpdateMetadataResult> _broadcaster = new();
     private readonly CollectMetadataToUpdateCommand _collectMetadataToUpdateCommand;
     private readonly ProcessManager _processManager;
 
-    /// <summary>
-    /// Liefert Daten zu bearbeiteten Dateien, sobald sie verfügbar sind.
-    /// </summary>
     public IObservable<UpdateMetadataResult> WhenDataAvailable => _broadcaster.AsObservable();
 
-    /// <summary>
-    /// Erstellt eine neue Instanz des UpdateMetadataCommand.
-    /// </summary>
-    /// <param name="collectMetadataToUpdateCommand">Ein Befehl zum Sammeln von Metadaten zur Aktualisierung.</param>
     public UpdateMetadataCommand(CollectMetadataToUpdateCommand collectMetadataToUpdateCommand)
     {
         _collectMetadataToUpdateCommand = collectMetadataToUpdateCommand;
         _processManager = new ProcessManager();
     }
 
-    /// <summary>
-    /// Führt den Befehl aus.
-    /// </summary>
-    /// <param name="context">Der Kontext des Workflows.</param>
     public void Execute(WorkflowContext context)
     {
         _collectMetadataToUpdateCommand.WhenDataAvailable.Subscribe(onNext: metadataBaseData =>
         {
-            if (metadataBaseData.Date.HasValue)
+            UpdatedTags updatedTags = new UpdatedTags(metadataBaseData.Date, metadataBaseData.Description);
+            if (updatedTags.Date.HasValue)
             {
-                string fileName = metadataBaseData.FileInfo.FullName;
-                var dayArguments = AtomicParsleyUpdateMetadataArguments.CreateOverwriteDay(fileName, metadataBaseData.Date.Value);
-
+                var dayArguments = AtomicParsleyUpdateMetadataArguments.CreateOverwriteDay(metadataBaseData.FileInfo.FullName, updatedTags.Date.Value);
                 _processManager.StartNewProcess("AtomicParsley", dayArguments.Arguments);
             }
 
-            if (metadataBaseData.Description.HasValue)
+            if (updatedTags.Description.HasValue)
             {
-                string fileName = metadataBaseData.FileInfo.FullName;
-                var descriptionArguments = AtomicParsleyUpdateMetadataArguments.CreateOverwriteDescription(fileName, metadataBaseData.Description.Value);
-
+                var descriptionArguments = AtomicParsleyUpdateMetadataArguments.CreateOverwriteDescription(metadataBaseData.FileInfo.FullName, updatedTags.Description.Value);
                 _processManager.StartNewProcess("AtomicParsley", descriptionArguments.Arguments);
             }
 
-            var result = UpdateMetadataResult.Create(metadataBaseData.FileInfo.FullName, metadataBaseData.Date, metadataBaseData.Description);
+            var result = UpdateMetadataResult.Create(metadataBaseData.FileInfo, updatedTags, metadataBaseData.MetadataCollection);
             _broadcaster.OnNext(result);
         });
 
@@ -61,41 +47,31 @@ public class UpdateMetadataCommand : ICommand<UpdateMetadataResult>
     }
 }
 
-/// <summary>
-/// Ein Ergebnis der Aktualisierung der Metadaten.
-/// </summary>
+public record UpdatedTags(Maybe<DateTime> Date, Maybe<string> Description);
+
 public class UpdateMetadataResult
 {
-    public string FileName { get; }
-    public Maybe<DateTime> Date { get; }
-    public Maybe<string> Description { get; }
+    public FileInfo File { get; }
+    public UpdatedTags Tags { get; }
+    public Mpeg4MetadataCollection UpdatedMetadata { get; }
 
-    /// <summary>
-    /// Eine Zusammenfassung der Aktualisierung der Metadaten.
-    /// </summary>
     public string SummaryMessage
     {
         get
         {
-            var datePart = Date.HasValue ? $"Date updated to {Date.Value:yyyy-MM-dd HH:mm:ss}" : "Date not updated";
-            var descPart = Description.HasValue ? $", Description updated to {Description.Value}" : ", Description not updated";
-            return $"In the file {FileName}, " + datePart + descPart;
+            var datePart = Tags.Date.HasValue ? $"Date updated to {Tags.Date.Value:yyyy-MM-dd HH:mm:ss}" : "Date not updated";
+            var descPart = Tags.Description.HasValue ? $", Description updated to {Tags.Description.Value}" : ", Description not updated";
+            return $"In the file {File.FullName}, " + datePart + descPart;
         }
     }
 
-    private UpdateMetadataResult(string fileName, Maybe<DateTime> date, Maybe<string> description)
+    private UpdateMetadataResult(FileInfo file, UpdatedTags tags, Mpeg4MetadataCollection updatedMetadata)
     {
-        FileName = fileName;
-        Date = date;
-        Description = description;
+        File = file;
+        Tags = tags;
+        UpdatedMetadata = updatedMetadata;
     }
 
-    /// <summary>
-    /// Erstellt eine neue Instanz des UpdateMetadataResult.
-    /// </summary>
-    /// <param name="fileName">Der Name der Datei, deren Metadaten aktualisiert wurden.</param>
-    /// <param name="date">Das aktualisierte Datum.</param>
-    /// <param name="description">Die aktualisierte Beschreibung.</param>
-    public static UpdateMetadataResult Create(string fileName, Maybe<DateTime> date, Maybe<string> description)
-        => new UpdateMetadataResult(fileName, date, description);
+    public static UpdateMetadataResult Create(FileInfo file, UpdatedTags tags, Mpeg4MetadataCollection updatedMetadata)
+        => new UpdateMetadataResult(file, tags, updatedMetadata);
 }
