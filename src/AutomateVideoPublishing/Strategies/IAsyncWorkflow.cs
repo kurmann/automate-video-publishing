@@ -2,5 +2,5 @@ namespace AutomateVideoPublishing.Strategies;
 
 public interface IAsyncWorkflow
 {
-    Task ExecuteAsync(WorkflowContext context);
+    Task<Result> ExecuteAsync(WorkflowContext context);
 }

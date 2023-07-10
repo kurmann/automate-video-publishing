@@ -50,9 +50,17 @@ class Program
 
         // Führe die ausgewählte Workflow-Strategie aus. Die Strategien selbst bestehen aus einer Abfolge
         // von Befehlen (Commands), deren Execute-Methode den Workflow implementiert.
-        await workflowMapperResult.Value.ExecuteAsync(contextResult.Value);
-
-        Environment.ExitCode = 0;
+        var worfklowResult = await workflowMapperResult.Value.ExecuteAsync(contextResult.Value);
+        if (worfklowResult.IsSuccess)
+        {
+            Console.WriteLine("Workflow completed successfully");
+            Environment.ExitCode = 0;  // Erfolg
+        }
+        else
+        {
+            Console.WriteLine($"Workflow failed: {worfklowResult.Error}");
+            Environment.ExitCode = 1;  // Fehler
+        }
     }
 }
 

@@ -12,7 +12,7 @@ public class SingleVideoPublishStrategy : IAsyncWorkflow
 
     public SingleVideoPublishStrategy() => _logger = LogManager.GetCurrentClassLogger();
 
-    public async Task ExecuteAsync(WorkflowContext context)
+    public async Task<Result> ExecuteAsync(WorkflowContext context)
     {
         _logger.Info("Start executing SingleVideoPublishStrategy");
 
@@ -34,5 +34,6 @@ public class SingleVideoPublishStrategy : IAsyncWorkflow
         }
 
         _logger.Info("Finished executing SingleVideoPublishStrategy");
+        return Result.Success();
     }
 }
