@@ -1,5 +1,6 @@
 using System.Text;
 using AutomateVideoPublishing.Commands;
+using AutomateVideoPublishing.Managers;
 
 namespace AutomateVideoPublishing.Strategies;
 
@@ -17,7 +18,7 @@ public class SingleVideoPublishStrategy : IAsyncWorkflow
         _logger.Info("Start executing SingleVideoPublishStrategy");
 
         // Bereite die Commands vor
-        var readMasterfileMetadataCommand = new ReadMasterfileMetadataCommand();
+        var readMasterfileMetadataCommand = new ReadMasterfileMetadataCommand(new MediaInfoManager());
 
         // Führe die Strategie für jede QuickTime-Datei aus.
         var stringBuilder = new StringBuilder();

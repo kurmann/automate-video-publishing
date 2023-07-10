@@ -18,6 +18,7 @@ namespace AutomateVideoPublishing.Entities.Metadata
                 {
                     if (!string.IsNullOrWhiteSpace(currentSection))
                     {
+                        currentProperties = RemoveDuplicateKeyValuePairs(currentProperties);
                         sections[currentSection] = currentProperties;
                         currentProperties = new List<KeyValuePair<string, string?>>();
                     }
@@ -42,11 +43,29 @@ namespace AutomateVideoPublishing.Entities.Metadata
             // Add the last section
             if (!string.IsNullOrWhiteSpace(currentSection) && currentProperties.Any())
             {
+                currentProperties = RemoveDuplicateKeyValuePairs(currentProperties);
                 sections[currentSection] = currentProperties;
             }
 
             return new MediaInfoMetadataLineOutput(sections);
         }
+
+        private static List<KeyValuePair<string, string?>> RemoveDuplicateKeyValuePairs(List<KeyValuePair<string, string?>> keyValuePairs)
+        {
+            var seen = new HashSet<KeyValuePair<string, string?>>();
+            var result = new List<KeyValuePair<string, string?>>();
+
+            foreach (var pair in keyValuePairs)
+            {
+                if (seen.Add(pair))
+                {
+                    result.Add(pair);
+                }
+            }
+
+            return result;
+        }
+
 
         public Maybe<string> Description =>
             ExtractSingleValueFromSection("General", "Description");
@@ -54,6 +73,15 @@ namespace AutomateVideoPublishing.Entities.Metadata
         public Maybe<string> Title =>
             ExtractSingleValueFromSection("General", "Title");
 
+        /// <summary>
+        /// Versucht, einen bestimmten Wert, identifiziert durch 'keyName', aus einer spezifischen Sektion, 
+        /// identifiziert durch 'sectionName', zu extrahieren.
+        /// Gibt die Werte aller übereinstimmenden Schlüssel als einen einzigen, durch Semikolons 
+        /// getrennten String zurück oder Maybe<string>.None, wenn kein übereinstimmender Schlüssel gefunden wurde.
+        /// </summary>
+        /// <param name="sectionName">Der Name der Section (bspw. "Video" oder "Audio"</param>
+        /// <param name="keyName">Der Schlüsselname bspw. "Title" oder "Duration"</param>
+        /// <returns></returns>
         private Maybe<string> ExtractSingleValueFromSection(string sectionName, string keyName)
         {
             if (Sections.TryGetValue(sectionName, out var section))

@@ -20,6 +20,7 @@
     <PackageReference Include="MetadataExtractor" Version="2.8.0" />
     <PackageReference Include="CSharpFunctionalExtensions" Version="2.39.2" />
     <PackageReference Include="NLog" Version="5.2.0" />
+    <PackageReference Include="YamlDotNet" Version="13.1.1" />
   </ItemGroup>
 
   <ItemGroup>

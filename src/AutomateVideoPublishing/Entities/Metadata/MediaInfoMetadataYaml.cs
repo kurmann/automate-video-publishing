@@ -12,12 +12,12 @@ public class MediaInfoMetadataYaml
 
     private MediaInfoMetadataYaml(string yamlContent) => YamlContent = yamlContent;
 
-    public static Result<MediaInfoMetadataYaml> CreateFromSectionDictionary(Dictionary<string, List<KeyValuePair<string, string?>>> sections)
+    public static Result<MediaInfoMetadataYaml> CreateFromMetadataSections(MetadataSections metadataSections)
     {
         try
         {
             var serializer = new SerializerBuilder().Build();
-            var yaml = serializer.Serialize(sections);
+            var yaml = serializer.Serialize(metadataSections);
             
             return Result.Success(new MediaInfoMetadataYaml(yaml));
         }

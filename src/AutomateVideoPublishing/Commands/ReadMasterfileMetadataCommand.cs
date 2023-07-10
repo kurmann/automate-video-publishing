@@ -1,45 +1,51 @@
+using System.IO;
 using AutomateVideoPublishing.Managers;
 
 namespace AutomateVideoPublishing.Commands;
 
-public class ReadMasterfileMetadataCommand : ICommand<string, Result<ReadMasterfileMetadataCommandResult>>
+/// <summary>
+/// Liest alle Metadaten aus der QuickTime-Datei und speichert sie als gleichnamiges YAML.
+/// </summary>
+public class ReadMasterfileMetadataCommand : IAsyncCommand<string, Result>
 {
-    private Logger _logger;
+    private readonly ILogger _logger;
+    private readonly MediaInfoManager _manager;
 
-    public ReadMasterfileMetadataCommand() => _logger = LogManager.GetCurrentClassLogger();
-
-    public Task<Result<ReadMasterfileMetadataCommandResult>> ExecuteAsync(string masterfilePath) => 
-        QuickTimeMasterFile.Create(masterfilePath)
-            .Bind(master => GetMetadata(master)
-            .Tap(result => Task.FromResult(result)));
-
-    private static async Task<Result<ReadMasterfileMetadataCommandResult>> GetMetadata(QuickTimeMasterFile quickTimeMasterFile)
+    public ReadMasterfileMetadataCommand(MediaInfoManager mediaInfoManager)
     {
+        _logger = LogManager.GetCurrentClassLogger();
+        _manager = mediaInfoManager;
+    }
+
+    public async Task<Result> ExecuteAsync(string masterfilePath)
+    {
+        var lines = await _manager.RunAsync(masterfilePath);
+        var yamlContent = MediaInfoMetadataLineOutput.Create(lines)
+            .Map(metadataLineOutput => ParsedQuicktimeMetadata.Create(metadataLineOutput)
+            .Bind(parsedQuickTimeMetadata => MediaInfoMetadataYaml.CreateFromMetadataSections(parsedQuickTimeMetadata.RawMetadata)));
+        if (yamlContent.IsFailure)
+        {
+            return Result.Failure(yamlContent.Error);
+        }
+        if (yamlContent.Value.IsFailure)
+        {
+            return Result.Failure(yamlContent.Value.Error);
+        }
+        var result = await WriteYamlToFileAsync(yamlContent.Value.Value, masterfilePath);
+        return result;
+    }
+
+    private async Task<Result> WriteYamlToFileAsync(MediaInfoMetadataYaml yamlData, string masterfilePath)
+    {
+        var yamlFilePath = Path.ChangeExtension(masterfilePath, "yaml");
         try
         {
-            var manager = new MediaInfoManager();
-            var lines = (await manager.RunAsync(quickTimeMasterFile.Value.FullName));
-            var metadataOutputResult = MediaInfoMetadataLineOutput.Create(lines);
-            if (metadataOutputResult.IsFailure)
-            {
-                return Result.Failure<ReadMasterfileMetadataCommandResult>(metadataOutputResult.Error);
-            }
-
-            return new ReadMasterfileMetadataCommandResult
-            {
-                Title = metadataOutputResult.Value.Title,
-                Description = metadataOutputResult.Value.Description
-            };
+            await File.WriteAllTextAsync(yamlFilePath, yamlData.YamlContent);
+            return Result.Success();
         }
         catch (Exception ex)
         {
-            return Result.Failure<ReadMasterfileMetadataCommandResult>($"Error on reading metdata with TagLib#: {ex.Message}");
+            return Result.Failure($"Failed to write YAML content to file: {ex.Message}");
         }
     }
-}
-
-public class ReadMasterfileMetadataCommandResult
-{
-    public Maybe<string> Title { get; set; }
-    public Maybe<string> Description { get; set; }
 }
