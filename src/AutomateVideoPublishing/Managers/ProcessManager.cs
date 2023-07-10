@@ -46,4 +46,20 @@ public class ProcessManager
         process.BeginOutputReadLine();
         process.WaitForExit();
     }
+
+    public async Task StartNewProcessAsync(string command, string? arguments)
+    {
+        var psi = new ProcessStartInfo(command, arguments ?? "")
+        {
+            RedirectStandardOutput = true,
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
+
+        using (var process = new Process { StartInfo = psi, EnableRaisingEvents = true })
+        {
+            process.Start();
+            await process.WaitForExitAsync();
+        }
+    }
 }
