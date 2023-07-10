@@ -1,4 +1,4 @@
-namespace AutomateVideoPublishing.Commands;
+namespace AutomateVideoPublishing.Strategies;
 
 public interface IAsyncWorkflow
 {

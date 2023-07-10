@@ -9,7 +9,6 @@ namespace AutomateVideoPublishing.Strategies;
 public class LocalVideoPublishStrategy : IWorkflowStrategy
 {
     private Subject<string> _broadcaster = new();
-    private ILogger logger;
 
     public IObservable<string> WhenStatusUpdateAvailable => _broadcaster.AsObservable();
 
