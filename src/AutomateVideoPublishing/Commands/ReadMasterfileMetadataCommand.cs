@@ -17,8 +17,8 @@ public class ReadMasterfileMetadataCommand : ICommand<string, Result<ReadMasterf
     {
         try
         {
-            var atomicParsleyManager = new AtomicParsleyManager();
-            var lines = await atomicParsleyManager.RunAsync(quickTimeMasterFile.Value.FullName);
+            var manager = new MediaInfoManager();
+            var lines = await manager.RunAsync(quickTimeMasterFile.Value.FullName);
 
             return new ReadMasterfileMetadataCommandResult
             {
