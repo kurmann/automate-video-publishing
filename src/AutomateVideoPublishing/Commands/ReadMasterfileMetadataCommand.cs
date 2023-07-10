@@ -18,12 +18,17 @@ public class ReadMasterfileMetadataCommand : ICommand<string, Result<ReadMasterf
         try
         {
             var manager = new MediaInfoManager();
-            var lines = await manager.RunAsync(quickTimeMasterFile.Value.FullName);
+            var lines = (await manager.RunAsync(quickTimeMasterFile.Value.FullName));
+            var metadataOutputResult = MediaInfoMetadataOutput.Create(lines);
+            if (metadataOutputResult.IsFailure)
+            {
+                return Result.Failure<ReadMasterfileMetadataCommandResult>(metadataOutputResult.Error);
+            }
 
             return new ReadMasterfileMetadataCommandResult
             {
-                // Title = string.IsNullOrWhiteSpace(tfile.Tag.Title) ? Maybe<string>.None : tfile.Tag.Title,
-                // Description = string.IsNullOrWhiteSpace(tfile.Tag.Description) ? Maybe<string>.None : tfile.Tag.Description,
+                Title = metadataOutputResult.Value.Title,
+                Description = metadataOutputResult.Value.Description
             };
         }
         catch (Exception ex)
