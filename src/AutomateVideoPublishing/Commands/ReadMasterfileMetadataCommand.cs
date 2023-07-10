@@ -19,7 +19,7 @@ public class ReadMasterfileMetadataCommand : ICommand<string, Result<ReadMasterf
         {
             var manager = new MediaInfoManager();
             var lines = (await manager.RunAsync(quickTimeMasterFile.Value.FullName));
-            var metadataOutputResult = MediaInfoMetadataOutput.Create(lines);
+            var metadataOutputResult = MediaInfoMetadataLineOutput.Create(lines);
             if (metadataOutputResult.IsFailure)
             {
                 return Result.Failure<ReadMasterfileMetadataCommandResult>(metadataOutputResult.Error);

@@ -1,12 +1,12 @@
 namespace AutomateVideoPublishing.Entities.Metadata
 {
-    public class MediaInfoMetadataOutput
+    public class MediaInfoMetadataLineOutput
     {
         public Dictionary<string, List<KeyValuePair<string, string?>>> Sections { get; }
 
-        private MediaInfoMetadataOutput(Dictionary<string, List<KeyValuePair<string, string?>>> sections) => Sections = sections;
+        private MediaInfoMetadataLineOutput(Dictionary<string, List<KeyValuePair<string, string?>>> sections) => Sections = sections;
 
-        public static Result<MediaInfoMetadataOutput, string> Create(IEnumerable<string> lines)
+        public static Result<MediaInfoMetadataLineOutput, string> Create(IEnumerable<string> lines)
         {
             var sections = new Dictionary<string, List<KeyValuePair<string, string?>>>();
             var currentSection = string.Empty;
@@ -45,7 +45,7 @@ namespace AutomateVideoPublishing.Entities.Metadata
                 sections[currentSection] = currentProperties;
             }
 
-            return new MediaInfoMetadataOutput(sections);
+            return new MediaInfoMetadataLineOutput(sections);
         }
 
         public Maybe<string> Description =>
