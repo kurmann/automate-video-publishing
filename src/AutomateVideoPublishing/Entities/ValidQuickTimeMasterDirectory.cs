@@ -14,7 +14,7 @@ public class ValidQuickTimeMasterDirectory
     /// <summary>
     /// Eine Sammlung von FileInfo-Objekten, die QuickTime-Dateien im Verzeichnis repräsentieren. Wenn keine Dateien gefunden werden, ist die Liste leer.
     /// </summary>
-    public IEnumerable<FileInfo> QuickTimeFiles { get; }
+    public IReadOnlyList<FileInfo> QuickTimeFiles { get; }
 
     private ValidQuickTimeMasterDirectory(DirectoryInfo directory, List<FileInfo> quickTimeFiles)
     {

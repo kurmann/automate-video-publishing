@@ -1,7 +1,6 @@
-using Microsoft.Extensions.Logging;
-
 namespace AutomateVideoPublishing.Strategies;
 
+[Obsolete("Use AsyncWorfklowMapper instead")]
 public class WorkflowStrategyMapper
 {
 

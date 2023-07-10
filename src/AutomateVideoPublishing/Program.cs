@@ -6,11 +6,13 @@ class Program
 {
     // Definiere einen Logger für die Anwendung. Die Konfiguration des Loggers erfolgt 
     // durch die NLog-Konfigurationsdatei (nlog.config).
-    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+    private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
     // Die Main-Methode ist der Einstiegspunkt der Konsolenanwendung. 
-    static void Main(string[] args)
+    static async Task Main(string[] args)
     {
+        logger.Info("Starting Automate Video Publishing application");
+
         // Erstelle ein Konfigurationsobjekt, das Umgebungsvariablen und Befehlszeilenargumente
         // berücksichtigt.
         var configuration = new ConfigurationBuilder()
@@ -22,53 +24,35 @@ class Program
         var options = new Options();
         configuration.Bind(options);
 
+        logger.Info($"Parsing workflow name {options.Workflow} from configuration values");
         // Erzeuge eine Instanz der ausgewählten Workflow-Strategie mithilfe eines Strategie-Mappers.
         // Bei einem Fehler wird ein entsprechender Log-Eintrag erstellt und das Programm wird beendet.
-        var strategyResult = WorkflowStrategyMapper.Create(options.Workflow);
-        if (strategyResult.IsFailure)
+        var workflowMapperResult = AsyncWorkflowMapper.Create(options.Workflow);
+        if (workflowMapperResult.IsFailure)
         {
-            Logger.Error($"Error on selecting strategy: {strategyResult.Error}");
+            logger.Error($"Error on parsing workflow: {workflowMapperResult.Error}");
             return;
         }
-        
-        // Erzeuge einen LogObserver und abonniere die Ereignisse der ausgewählten Workflow-Strategie.
-        var logObserver = new LogObserver();
-        var strategyUnsubscriber = strategyResult.Value.SelectedStrategy.WhenStatusUpdateAvailable.Subscribe(logObserver);
 
         // Erzeuge den Workflow-Kontext, der Daten enthält, die für alle Workflow-Strategien nützlich sind. 
         // Bei einem Fehler wird ein entsprechender Log-Eintrag erstellt und das Programm wird beendet.
         var contextResult = WorkflowContext.Create(options.QuickTimeMasterDirectory,
                                                    options.PublishedMpeg4Directory,
                                                    options.PublishedMediaLocalDirectory)
-            .Tap(context => Logger.Info($"Start execution of {strategyResult.Value.SelectedStrategy}."))
-            .Tap(context => Logger.Info($"Executing workflow with quick time masterfile directory: {context.QuickTimeMasterDirectory.Directory}"))
-            .Tap(context => Logger.Info($"Executing workflow with published MPEG-4 directory: {context.PublishedMpeg4Directory.Directory}"));
+            .Tap(context => logger.Info($"Start execution of {workflowMapperResult.Value}."))
+            .Tap(context => logger.Info($"Executing workflow with quick time masterfile directory: {context.QuickTimeMasterDirectory.Directory}"))
+            .Tap(context => logger.Info($"Executing workflow with published MPEG-4 directory: {context.PublishedMpeg4Directory.Directory}"));
         if (contextResult.IsFailure)
         {
-            Logger.Error($"Error creating workflow context: {contextResult.Error}");
+            logger.Error($"Error creating workflow context: {contextResult.Error}");
             return;
         }
 
         // Führe die ausgewählte Workflow-Strategie aus. Die Strategien selbst bestehen aus einer Abfolge
         // von Befehlen (Commands), deren Execute-Methode den Workflow implementiert.
-        strategyResult.Value.SelectedStrategy.Execute(contextResult.Value);
+        await workflowMapperResult.Value.ExecuteAsync(contextResult.Value);
 
-        // Log-Observer abschliessen
-        // Diese Methode wird aufgerufen, um dem LogObserver zu signalisieren, dass das Observable, auf das er
-        // abonniert hat (in diesem Fall der EventBroadcaster der gewählten Strategie), keine weiteren Daten 
-        // senden wird. Nachdem diese Methode aufgerufen wurde, sollte der LogObserver keine weiteren 
-        // OnNext- oder OnError-Aufrufe von diesem Observable erwarten. 
-        logObserver.OnCompleted();
-
-        // Beende die Verbindung zwischen dem LogObserver und der ausgewählten Workflow-Strategie.
-        // Diese Methode wird aufgerufen, um den LogObserver effektiv von der Liste der Observer des 
-        // Observables zu entfernen. Durch Aufrufen dieser Methode teilen wir dem Observable mit, dass es keine
-        // weiteren Daten an den LogObserver senden soll. Diese Methode ist besonders nützlich, wenn das Observable
-        // weiter Daten senden könnte, der spezifische Observer (in diesem Fall der LogObserver) jedoch keine
-        // weiteren Daten empfangen möchte. In diesem speziellen Fall, in dem das Programm kurz danach endet, 
-        // ist es möglicherweise nicht notwendig, diese Methode aufzurufen, jedoch sorgt dies für eine saubere
-        // und korrekte Verwendung des Observer-Patterns.
-        strategyUnsubscriber.Dispose();
+        Environment.ExitCode = 0;
     }
 }
 
