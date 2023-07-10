@@ -2,80 +2,69 @@ namespace AutomateVideoPublishing.Entities.Metadata
 {
     public class MediaInfoMetadataOutput
     {
-        public Dictionary<string, string?> GeneralSection { get; }
+        public Dictionary<string, List<KeyValuePair<string, string?>>> Sections { get; }
 
-        public Maybe<string> Description =>
-            GeneralSection.TryGetValue("Description", out var description) && !string.IsNullOrEmpty(description)
-                ? Maybe.From(description)
-                : Maybe<string>.None;
+        private MediaInfoMetadataOutput(Dictionary<string, List<KeyValuePair<string, string?>>> sections) => Sections = sections;
 
-        public Maybe<string> Title =>
-            GeneralSection.TryGetValue("Title", out var title) && !string.IsNullOrEmpty(title)
-                ? Maybe.From(title)
-                : Maybe<string>.None;
-
-        private MediaInfoMetadataOutput(Dictionary<string, string?> generalSection) => GeneralSection = generalSection;
-
-        public static Result<MediaInfoMetadataOutput> Create(IEnumerable<string> lines)
+        public static Result<MediaInfoMetadataOutput, string> Create(IEnumerable<string> lines)
         {
-            try
-            {
-                var generalSection = ExtractGeneralSection(lines);
-                return new MediaInfoMetadataOutput(generalSection);
-            }
-            catch (Exception ex)
-            {
-                // Loggen oder behandeln Sie den Fehler hier, falls notwendig
-                return Result.Failure<MediaInfoMetadataOutput>(ex.Message);
-            }
-        }
-
-        private static Dictionary<string, string?> ExtractGeneralSection(IEnumerable<string> lines)
-        {
-            var result = new Dictionary<string, string?>();
-
-            bool isGeneralSection = false;
+            var sections = new Dictionary<string, List<KeyValuePair<string, string?>>>();
+            var currentSection = string.Empty;
+            var currentProperties = new List<KeyValuePair<string, string?>>();
 
             foreach (var line in lines)
             {
-                if (line.StartsWith("General"))
+                if (string.IsNullOrWhiteSpace(line)) // New section begins
                 {
-                    isGeneralSection = true;
-                    continue;
+                    if (!string.IsNullOrWhiteSpace(currentSection))
+                    {
+                        sections[currentSection] = currentProperties;
+                        currentProperties = new List<KeyValuePair<string, string?>>();
+                    }
                 }
-
-                // Check if the line is empty, in which case, we assume that the 'General' section has ended.
-                if (string.IsNullOrWhiteSpace(line))
-                {
-                    break;
-                }
-
-                if (isGeneralSection)
+                else
                 {
                     var parts = line.Split(':', 2);
-                    if (parts.Length == 2) // Prüfe ob die Zeile ein gültiges Schlüssel-Wert-Paar ist
+                    if (parts.Length == 1) // This line is the name of the section
+                    {
+                        currentSection = parts[0].Trim();
+                    }
+                    else if (parts.Length == 2) // This line is a property of the current section
                     {
                         var key = parts[0].Trim();
                         var value = parts[1].Trim();
 
-                        if (!string.IsNullOrWhiteSpace(key)) // Überprüfe, ob der Schlüssel nicht leer oder null ist
-                        {
-                            if (!result.ContainsKey(key))
-                            {
-                                result[key] = value;
-                            }
-                            else
-                            {
-                                result[key] += "; " + value; // Füge zusätzliche Werte mit Semikolon getrennt hinzu
-                            }
-                        }
+                        currentProperties.Add(new KeyValuePair<string, string?>(key, value));
                     }
                 }
             }
 
-            return result;
+            // Add the last section
+            if (!string.IsNullOrWhiteSpace(currentSection) && currentProperties.Any())
+            {
+                sections[currentSection] = currentProperties;
+            }
+
+            return new MediaInfoMetadataOutput(sections);
         }
 
+        public Maybe<string> Description =>
+            ExtractSingleValueFromSection("General", "Description");
 
+        public Maybe<string> Title =>
+            ExtractSingleValueFromSection("General", "Title");
+
+        private Maybe<string> ExtractSingleValueFromSection(string sectionName, string keyName)
+        {
+            if (Sections.TryGetValue(sectionName, out var section))
+            {
+                var keyValuePairs = section.Where(pair => pair.Key == keyName).ToList();
+                if (keyValuePairs.Any())
+                {
+                    return string.Join("; ", keyValuePairs.Select(pair => pair.Value));
+                }
+            }
+            return Maybe<string>.None;
+        }
     }
 }
