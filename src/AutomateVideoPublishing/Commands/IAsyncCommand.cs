@@ -1,6 +1,6 @@
 namespace AutomateVideoPublishing.Commands;
 
-public interface ICommand<TInput, TResult>
+public interface IAsyncCommand<TInput, TResult>
 {
     Task<TResult> ExecuteAsync(TInput input);
 }
