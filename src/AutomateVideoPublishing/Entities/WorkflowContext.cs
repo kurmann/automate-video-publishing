@@ -1,5 +1,3 @@
-using Microsoft.Extensions.Logging;
-
 namespace AutomateVideoPublishing.Entities;
 
 public class WorkflowContext
@@ -27,22 +25,14 @@ public class WorkflowContext
     /// </summary>
     public ValidMediaLocalDirectory PublishedMediaLocalDirectory { get; }
 
-    /// <summary>
-    /// Die Logger-Instanz
-    /// </summary>
-    /// <value></value>
-    public ILogger Logger { get; }
-
     private WorkflowContext(
         ValidQuickTimeMasterDirectory quickTimeMasterDirectory,
         ValidMpeg4Directory publishedMpeg4Directory,
-        ValidMediaLocalDirectory publishedMediaLocalDirectory,
-        ILogger logger)
+        ValidMediaLocalDirectory publishedMediaLocalDirectory)
     {
         QuickTimeMasterDirectory = quickTimeMasterDirectory;
         PublishedMpeg4Directory = publishedMpeg4Directory;
         PublishedMediaLocalDirectory = publishedMediaLocalDirectory;
-        Logger = logger;
     }
 
     /// <summary>
@@ -58,21 +48,6 @@ public class WorkflowContext
         quickTimeMasterDirectoryPath = string.IsNullOrWhiteSpace(quickTimeMasterDirectoryPath) ? DefaultDirectory : quickTimeMasterDirectoryPath;
         publishedMpeg4DirectoryPath = string.IsNullOrWhiteSpace(publishedMpeg4DirectoryPath) ? DefaultDirectory : publishedMpeg4DirectoryPath;
         publishedMediaLocalDirectoryPath = string.IsNullOrWhiteSpace(publishedMediaLocalDirectoryPath) ? Path.Combine(DefaultDirectory, "Published") :publishedMediaLocalDirectoryPath;
-
-        // Set default logger if none is provided
-        if (logger == null)
-        {
-            var loggerFactory = LoggerFactory.Create(builder => 
-            {
-                builder
-                    .AddFilter("Microsoft", LogLevel.Warning)
-                    .AddFilter("System", LogLevel.Warning)
-                    .AddFilter("LoggingConsoleApp.Program", LogLevel.Debug)
-                    .AddConsole();
-            });
-
-            logger = loggerFactory.CreateLogger<WorkflowContext>();
-        }
 
         var quickTimeMasterDirectoryResult = ValidQuickTimeMasterDirectory.Create(quickTimeMasterDirectoryPath);
 
@@ -96,7 +71,6 @@ public class WorkflowContext
         return new WorkflowContext(
             quickTimeMasterDirectoryResult.Value,
             publishedMpeg4DirectoryResult.Value,
-            publishedMediaLocalDirectoryResult.Value,
-            logger);
+            publishedMediaLocalDirectoryResult.Value);
     }
 }
