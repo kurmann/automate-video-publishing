@@ -19,28 +19,37 @@ public class ReadMasterfileMetadataCommand : IAsyncCommand<string, Result>
 
     public async Task<Result> ExecuteAsync(string masterfilePath)
     {
-        var lines = await _manager.RunAsync(masterfilePath);
-        var yamlContent = MediaInfoMetadataLineOutput.Create(lines)
-            .Map(metadataLineOutput => ParsedQuicktimeMetadata.Create(metadataLineOutput)
-            .Bind(parsedQuickTimeMetadata => MediaInfoMetadataYaml.CreateFromMetadataSections(parsedQuickTimeMetadata.RawMetadata)));
+        var jsonDoc = await _manager.RunAsync(masterfilePath);
+        if (jsonDoc.IsFailure)
+        {
+            return Result.Failure($"Error on reading JSON data using MediaInfo CLI: {jsonDoc.Error}");
+        }
+
+        var essentialMpeg4Metadate = EssentialMpeg4Metadata.Create(jsonDoc.Value);
+        if (essentialMpeg4Metadate.IsFailure)
+        {
+            return Result.Failure(essentialMpeg4Metadate.Error);
+        }
+        var yamlContent = essentialMpeg4Metadate.Value.GetYamlContent();
         if (yamlContent.IsFailure)
         {
-            return Result.Failure(yamlContent.Error);
+            return Result.Failure($"Error on creating YAMl content from essential MPEG-4 Data: {yamlContent.Value}");
         }
-        if (yamlContent.Value.IsFailure)
+        var yamlWriteResult = await WriteYamlToFileAsync(yamlContent.Value, masterfilePath);
+        if (yamlWriteResult.IsFailure)
         {
-            return Result.Failure(yamlContent.Value.Error);
+            return Result.Failure($"Error on writing YAML content to file: {yamlWriteResult.Error}");
         }
-        var result = await WriteYamlToFileAsync(yamlContent.Value.Value, masterfilePath);
-        return result;
+
+        return yamlWriteResult;
     }
 
-    private async Task<Result> WriteYamlToFileAsync(MediaInfoMetadataYaml yamlData, string masterfilePath)
+    private async Task<Result> WriteYamlToFileAsync(YamlContent yamlData, string masterfilePath)
     {
         var yamlFilePath = Path.ChangeExtension(masterfilePath, "yaml");
         try
         {
-            await File.WriteAllTextAsync(yamlFilePath, yamlData.YamlContent);
+            await File.WriteAllTextAsync(yamlFilePath, yamlData.Value);
             return Result.Success();
         }
         catch (Exception ex)

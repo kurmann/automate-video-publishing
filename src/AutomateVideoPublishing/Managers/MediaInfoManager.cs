@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Text;
+using System.Text.Json;
 
 namespace AutomateVideoPublishing.Managers;
 
@@ -11,11 +12,11 @@ public class MediaInfoManager
 
     public MediaInfoManager() => _logger = LogManager.GetCurrentClassLogger();
 
-    public async Task<List<string>> RunAsync(string filePath)
+    public async Task<Result<JsonDocument>> RunAsync(string filePath)
     {
         _logger.Info($"Running MediaInfoManager for file: {filePath}");
 
-        var arguments = $"--BOM -f \"{filePath}\"";
+        var arguments = $"--Output=JSON -f \"{filePath}\"";
         _logger.Info($"Command: {_mediaInfoPath} {arguments}");
         var lines = new List<string>();
 
@@ -33,7 +34,7 @@ public class MediaInfoManager
             {
                 if (e.Data != null)
                 {
-                    _logger.Info("Received line: {Line}", e.Data);
+                    _logger.Info(e.Data);
                     lines.Add(e.Data);
                 }
             };
@@ -43,7 +44,17 @@ public class MediaInfoManager
             await process.WaitForExitAsync();
         }
 
-        return lines;
+        var jsonString = string.Join("", lines);
+        try
+        {
+            return JsonDocument.Parse(jsonString);
+        }
+        catch (JsonException ex)
+        {
+            _logger.Error(ex, "Failed to parse JSON output from MediaInfo");
+            return Result.Failure<JsonDocument>($"Failed to parse JSON output from MediaInfo: {ex.Message}");
+        }
     }
+
 
 }

@@ -9,10 +9,10 @@ public class ParsedQuicktimeMetadata
     // Properties
     public Maybe<string> Title { get; }
     public Maybe<string> Description { get; }
-    public MetadataSections RawMetadata { get; }
+    public @object RawMetadata { get; }
 
     // Private Constructor
-    private ParsedQuicktimeMetadata(MetadataSections sections)
+    private ParsedQuicktimeMetadata(@object sections)
     {
         RawMetadata = sections;
         Title = ExtractValueFromDictionary(sections.General, "Title");
@@ -54,7 +54,7 @@ public class ParsedQuicktimeMetadata
             return Result.Failure<ParsedQuicktimeMetadata>("mediaInfoMetadataLineOutput cannot be null.");
 
         // Erstelle Sections
-        var sections = new MetadataSections
+        var sections = new @object
         {
             General = mediaInfoMetadataLineOutput.Sections.ContainsKey("General")
                 ? MergeKeyValuePairListIntoDictionary(mediaInfoMetadataLineOutput.Sections["General"])
@@ -106,7 +106,7 @@ public class ParsedQuicktimeMetadata
     }
 }
 
-public record MetadataSections
+public record @object
 {
     public Dictionary<string, string?>? General { get; set; }
     public Dictionary<string, string?>? Video { get; set; }
