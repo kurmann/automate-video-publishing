@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text;
 
 namespace AutomateVideoPublishing.Managers;
 
@@ -14,7 +15,7 @@ public class MediaInfoManager
     {
         _logger.Info($"Running MediaInfoManager for file: {filePath}");
 
-        var arguments = $"-f \"{filePath}\"";
+        var arguments = $"--BOM -f \"{filePath}\"";
         _logger.Info($"Command: {_mediaInfoPath} {arguments}");
         var lines = new List<string>();
 
@@ -22,7 +23,8 @@ public class MediaInfoManager
         {
             RedirectStandardOutput = true,
             UseShellExecute = false,
-            CreateNoWindow = true
+            CreateNoWindow = true,
+            StandardOutputEncoding = Encoding.UTF8
         };
 
         using (var process = new Process { StartInfo = psi, EnableRaisingEvents = true })
