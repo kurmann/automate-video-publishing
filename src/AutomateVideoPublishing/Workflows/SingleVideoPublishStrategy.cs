@@ -19,8 +19,6 @@ public class SingleVideoPublishStrategy : IAsyncWorkflow
 
         // Bereite die Commands vor
         var readMasterfileMetadataCommand = new ReadMasterfileMetadataCommand(new MediaInfoManager());
-        string outputDir = context.PublishedMpeg4Directory.Directory.FullName;
-        var compressMasterfileCommand = new CompressMasterfileCommand(new AppleCompressorManager(), outputDir);
 
         // Führe die Strategie für jede QuickTime-Datei aus.
         var stringBuilder = new StringBuilder();
@@ -32,13 +30,6 @@ public class SingleVideoPublishStrategy : IAsyncWorkflow
             if (readMetadataResult.IsFailure)
             {
                 _logger.Error(readMetadataResult.Error);
-                continue;
-            }
-
-            var compressResult = await compressMasterfileCommand.ExecuteAsync(masterfile.FullName);
-            if (compressResult.IsFailure)
-            {
-                _logger.Error(compressResult.Error);
                 continue;
             }
         }
