@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 namespace AutomateVideoPublishing.Entities.Metadata
 {
     public class MediaInfoMetadataLineOutput
@@ -14,27 +16,27 @@ namespace AutomateVideoPublishing.Entities.Metadata
 
             foreach (var line in lines)
             {
-                if (string.IsNullOrWhiteSpace(line)) // New section begins
+                var trimmedLine = line.Trim();
+
+                // Check if this line is a section header
+                if (trimmedLine == "General" || trimmedLine == "Video" || trimmedLine == "Audio" || trimmedLine == "Other" || trimmedLine == "Menu")
                 {
+                    // Save current section and start a new one
                     if (!string.IsNullOrWhiteSpace(currentSection))
                     {
                         currentProperties = RemoveDuplicateKeyValuePairs(currentProperties);
                         sections[currentSection] = currentProperties;
                         currentProperties = new List<KeyValuePair<string, string?>>();
                     }
+                    currentSection = trimmedLine;
                 }
-                else
+                else if (!string.IsNullOrWhiteSpace(trimmedLine)) // This line is a property of the current section
                 {
-                    var parts = line.Split(':', 2);
-                    if (parts.Length == 1) // This line is the name of the section
-                    {
-                        currentSection = parts[0].Trim();
-                    }
-                    else if (parts.Length == 2) // This line is a property of the current section
+                    var parts = trimmedLine.Split(':', 2);
+                    if (parts.Length == 2)
                     {
                         var key = parts[0].Trim();
                         var value = parts[1].Trim();
-
                         currentProperties.Add(new KeyValuePair<string, string?>(key, value));
                     }
                 }
@@ -49,6 +51,7 @@ namespace AutomateVideoPublishing.Entities.Metadata
 
             return new MediaInfoMetadataLineOutput(sections);
         }
+
 
         private static List<KeyValuePair<string, string?>> RemoveDuplicateKeyValuePairs(List<KeyValuePair<string, string?>> keyValuePairs)
         {
