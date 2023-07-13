@@ -14,7 +14,6 @@ public class EssentialMpeg4Metadata
     public Maybe<string> Duration_String3 { get; }
     public Maybe<string> FileExtension { get; }
     public Maybe<string> Format { get; }
-    public Maybe<string> Format_Commercial { get; }
     public Maybe<string> Producer { get; }
     public Maybe<string> InternetMediaType { get; }
     public Maybe<double> BitRate { get; }
@@ -36,7 +35,6 @@ public class EssentialMpeg4Metadata
         Duration_String3 = GetValue<string>(jsonObject, "Duration_String3");
         FileExtension = GetValue<string>(jsonObject, "FileExtension");
         Format = GetValue<string>(jsonObject, "Format");
-        Format_Commercial = GetValue<string>(jsonObject, "Format_Commercial");
         Producer = GetValue<string>(jsonObject, "Producer");
         InternetMediaType = GetValue<string>(jsonObject, "InternetMediaType");
         BitRate = GetValue<double>(jsonObject, "BitRate");
@@ -49,10 +47,17 @@ public class EssentialMpeg4Metadata
 
     public static Result<EssentialMpeg4Metadata> Create(JsonElement jsonObject)
     {
-        // Hier könnten Sie verschiedene Überprüfungen einfügen, 
-        // um sicherzustellen, dass das jsonObject die erwartete Struktur hat. 
-        // Wenn es nicht die erwartete Struktur hat, geben Sie ein Ergebnisfehler zurück.
-        // ...
+        if (!jsonObject.TryGetProperty("creatingLibrary", out var creatingLibraryProperty)
+            || creatingLibraryProperty.ValueKind != JsonValueKind.Object)
+        {
+            return Result.Failure<EssentialMpeg4Metadata>("Das JSON-Objekt enthält nicht das erforderliche 'creatingLibrary' Element.");
+        }
+
+        if (!creatingLibraryProperty.TryGetProperty("name", out var nameProperty)
+            || nameProperty.GetString() != "MediaInfoLib")
+        {
+            return Result.Failure<EssentialMpeg4Metadata>("Das 'creatingLibrary' Element enthält nicht den erwarteten 'MediaInfoLib' Namen.");
+        }
 
         return Result.Success(new EssentialMpeg4Metadata(jsonObject));
     }
