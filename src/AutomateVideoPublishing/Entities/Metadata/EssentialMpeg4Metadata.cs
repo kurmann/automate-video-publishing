@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json;
 
 namespace AutomateVideoPublishing.Entities.Metadata;
@@ -11,7 +12,8 @@ public class EssentialMpeg4Metadata
     public Maybe<int> Height { get; }
     public Maybe<float> FrameRate { get; }
     public Maybe<string> FileName { get; }
-    public Maybe<string> Duration_String3 { get; }
+    public Maybe<string> DurationString { get; }
+    public Maybe<TimeSpan> Duration => GetDuration(DurationString);
     public Maybe<string> FileExtension { get; }
     public Maybe<string> Format { get; }
     public Maybe<string> Producer { get; }
@@ -32,7 +34,7 @@ public class EssentialMpeg4Metadata
         Height = GetValue<int>(jsonObject, "Height");
         FrameRate = GetValue<float>(jsonObject, "FrameRate");
         FileName = GetValue<string>(jsonObject, "FileName");
-        Duration_String3 = GetValue<string>(jsonObject, "Duration_String3");
+        DurationString = GetValue<string>(jsonObject, "Duration_String3");
         FileExtension = GetValue<string>(jsonObject, "FileExtension");
         Format = GetValue<string>(jsonObject, "Format");
         Producer = GetValue<string>(jsonObject, "Producer");
@@ -75,4 +77,19 @@ public class EssentialMpeg4Metadata
 
         return Maybe<T>.None;
     }
+
+    private static Maybe<TimeSpan> GetDuration(Maybe<string> durationString)
+    {
+        if (durationString.HasNoValue)
+        {
+            return Maybe<TimeSpan>.None;
+        }
+        if (TimeSpan.TryParseExact(durationString.Value, @"hh\:mm\:ss\.fff", CultureInfo.InvariantCulture, out var duration))
+        {
+            return Maybe<TimeSpan>.From(duration);
+        }
+
+        return Maybe<TimeSpan>.None;
+    }
+
 }
