@@ -1,4 +1,4 @@
-namespace AutomateVideoPublishing.Strategies;
+namespace AutomateVideoPublishing.Workflows;
 
 public class AsyncWorkflowMapper
 {
@@ -11,7 +11,7 @@ public class AsyncWorkflowMapper
     {
         if (string.IsNullOrWhiteSpace(workflowName))
         {
-            workflowName = nameof(ReadAllMetadataStrategy);
+            // todo: read metadata as default workflow
         }
 
         IAsyncWorkflow workflow;

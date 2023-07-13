@@ -2,7 +2,7 @@ using System.Text;
 using AutomateVideoPublishing.Commands;
 using AutomateVideoPublishing.Managers;
 
-namespace AutomateVideoPublishing.Strategies;
+namespace AutomateVideoPublishing.Workflows;
 
 /// <summary>
 /// Strategie für das Publizieren einer einzelnen komprimierten Videodatei, die aus der Masterdatei erstellt wird.

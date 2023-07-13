@@ -1,6 +1,5 @@
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using Microsoft.Extensions.Logging;
 using AutomateVideoPublishing.Commands;
 using AutomateVideoPublishing.Managers;
 

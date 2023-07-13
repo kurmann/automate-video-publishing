@@ -1,6 +1,5 @@
-﻿using AutomateVideoPublishing.Strategies;
+﻿using AutomateVideoPublishing.Workflows;
 using Microsoft.Extensions.Configuration;
-using NLog;
 
 class Program
 {
