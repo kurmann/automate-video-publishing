@@ -8,45 +8,41 @@ public class EssentialMpeg4Metadata
     public Maybe<string> Title { get; }
     public Maybe<string> Description { get; }
     public Maybe<string> Album { get; }
-    public Maybe<string> HDR_Format { get; }
-    public Maybe<int> Width { get; }
-    public Maybe<int> Height { get; }
-    public Maybe<float> FrameRate { get; }
-    public Maybe<string> FileName { get; }
+    public Maybe<string> HdrFormat { get; }
+    public Maybe<string> WidthString { get; }
+    public Maybe<string> HeightString { get; }
+    public Maybe<string> FrameRateString { get; }
     public Maybe<string> DurationString { get; }
     public Maybe<TimeSpan> Duration => GetDuration(DurationString);
-    public Maybe<string> FileExtension { get; }
     public Maybe<string> Format { get; }
     public Maybe<string> Producer { get; }
     public Maybe<string> InternetMediaType { get; }
-    public Maybe<double> BitRate { get; }
+    public Maybe<string> BitRateString { get; }
     public Maybe<string> ChromaSubsampling { get; }
-    public Maybe<int> BitDepth { get; }
-    public Maybe<long> FileSize { get; }
-    public Maybe<DateTime> Encoded_Date { get; }
-    public Maybe<List<string>> Extra { get; }
+    public Maybe<string> BitDepth { get; }
+    public Maybe<string> FileSize { get; }
+    public Maybe<string> EncodedDateString { get; }
+    public Maybe<string> Extra { get; }
 
     private EssentialMpeg4Metadata(JsonElement jsonObject)
     {
-        Title = GetValue<string>(jsonObject, "Title");
-        Description = GetValue<string>(jsonObject, "Title_More");
-        Album = GetValue<string>(jsonObject, "Album");
-        HDR_Format = GetValue<string>(jsonObject, "HDR_Format");
-        Width = GetValue<int>(jsonObject, "Width");
-        Height = GetValue<int>(jsonObject, "Height");
-        FrameRate = GetValue<float>(jsonObject, "FrameRate");
-        FileName = GetValue<string>(jsonObject, "FileName");
-        DurationString = GetValue<string>(jsonObject, "Duration_String3");
-        FileExtension = GetValue<string>(jsonObject, "FileExtension");
-        Format = GetValue<string>(jsonObject, "Format");
-        Producer = GetValue<string>(jsonObject, "Producer");
-        InternetMediaType = GetValue<string>(jsonObject, "InternetMediaType");
-        BitRate = GetValue<double>(jsonObject, "BitRate");
-        ChromaSubsampling = GetValue<string>(jsonObject, "ChromaSubsampling");
-        BitDepth = GetValue<int>(jsonObject, "BitDepth");
-        FileSize = GetValue<long>(jsonObject, "FileSize");
-        Encoded_Date = GetValue<DateTime>(jsonObject, "Encoded_Date");
-        // Extra = GetValue<List<string>>(jsonObject, "extra");
+        Title = GetValue(jsonObject, "Title");
+        Description = GetValue(jsonObject, "Title_More");
+        Album = GetValue(jsonObject, "Album");
+        HdrFormat = GetValue(jsonObject, "HDR_Format");
+        WidthString = GetValue(jsonObject, "Width");
+        HeightString = GetValue(jsonObject, "Height");
+        FrameRateString = GetValue(jsonObject, "FrameRate");
+        DurationString = GetValue(jsonObject, "Duration_String3");
+        Format = GetValue(jsonObject, "Format");
+        Producer = GetValue(jsonObject, "Producer");
+        InternetMediaType = GetValue(jsonObject, "InternetMediaType");
+        BitRateString = GetValue(jsonObject, "BitRate");
+        ChromaSubsampling = GetValue(jsonObject, "ChromaSubsampling");
+        BitDepth = GetValue(jsonObject, "BitDepth");
+        FileSize = GetValue(jsonObject, "FileSize");
+        EncodedDateString = GetValue(jsonObject, "Encoded_Date");
+        // Extra = GetValue(jsonObject, "extra");
     }
 
     public static Result<EssentialMpeg4Metadata> Create(JsonDocument? jsonDocument)
@@ -91,32 +87,20 @@ public class EssentialMpeg4Metadata
 
     public Result<YamlContent> GetYamlContent() => YamlContent.CreateFromMetadataSections(this);
 
-    private static Maybe<T> GetValue<T>(JsonElement jsonObject, string propertyName)
+    private static Maybe<string> GetValue(JsonElement jsonObject, string propertyName)
     {
         if (jsonObject.TryGetProperty(propertyName, out var property))
         {
             if (property.ValueKind != JsonValueKind.Null)
             {
-                if (typeof(T) == typeof(DateTime))
-                {
-                    var dateString = JsonSerializer.Deserialize<string>(property.GetRawText());
-                    return (T)(object)ParseDateTime(dateString);
-                }
-                else
-                {
-                    var options = new JsonSerializerOptions
-                    {
-                        NumberHandling = System.Text.Json.Serialization.JsonNumberHandling.AllowReadingFromString,
-                        ReadCommentHandling = JsonCommentHandling.Skip,
-                    };
-                    var value = JsonSerializer.Deserialize<T>(property.GetRawText(), options);
-                    return value != null ? value : Maybe<T>.None;
-                }
+                var value = property.GetString();
+                return value != null ? Maybe<string>.From(value) : Maybe<string>.None;
             }
         }
 
-        return Maybe<T>.None;
+        return Maybe<string>.None;
     }
+
 
     private static DateTime ParseDateTime(string? dateString)
     {
