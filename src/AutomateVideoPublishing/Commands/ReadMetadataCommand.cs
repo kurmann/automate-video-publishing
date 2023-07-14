@@ -39,7 +39,7 @@ public class ReadMetadataCommand : IAsyncCommand<string, Result>
                 yamlContentResult = mpeg4Metadata.Value.GetYamlContent();
                 break;
             case SupportedMediaType.QuickTime:
-                var quickTimeMetadata = EssentialQuickTimeMetadata.Create(jsonDocResult.Value);
+                var quickTimeMetadata = RelevantQuickTimeMetadata.Create(jsonDocResult.Value);
                 if (quickTimeMetadata.IsFailure)
                 {
                     return Result.Failure(quickTimeMetadata.Error);

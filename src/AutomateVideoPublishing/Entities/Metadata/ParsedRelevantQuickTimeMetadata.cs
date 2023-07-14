@@ -2,23 +2,23 @@ using System.Globalization;
 
 namespace AutomateVideoPublishing.Parsers;
 
-public class ParsedQuickTimeMetadata
+public class ParsedRelevantQuickTimeMetadata
 {
     public Maybe<TimeSpan> Duration { get; }
 
-    private ParsedQuickTimeMetadata(EssentialQuickTimeMetadata metadata)
+    private ParsedRelevantQuickTimeMetadata(RelevantQuickTimeMetadata metadata)
     {
         Duration = GetDuration(metadata.DurationString);
     }
 
-    public static Result<ParsedQuickTimeMetadata> Create(EssentialQuickTimeMetadata metadata)
+    public static Result<ParsedRelevantQuickTimeMetadata> Create(RelevantQuickTimeMetadata metadata)
     {
         if (metadata == null)
         {
-            return Result.Failure<ParsedQuickTimeMetadata>("Die EssentialQuickTimeMetadata dürfen nicht null sein.");
+            return Result.Failure<ParsedRelevantQuickTimeMetadata>("Die EssentialQuickTimeMetadata dürfen nicht null sein.");
         }
 
-        return Result.Success(new ParsedQuickTimeMetadata(metadata));
+        return Result.Success(new ParsedRelevantQuickTimeMetadata(metadata));
     }
 
     private static Maybe<TimeSpan> GetDuration(string? durationString)
