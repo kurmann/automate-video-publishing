@@ -11,17 +11,15 @@ public enum SupportedMediaType
 /// </summary>
 public class SupportedMediaFile
 {
-    public FileInfo Value { get; }
     public SupportedMediaType MediaType { get; }
-    public Mpeg4File Mpeg4File { get; }
-    public QuickTimeMasterFile QuickTimeFile { get; }
+    public Maybe<Mpeg4File> Mpeg4 { get; }
+    public Maybe<QuickTimeMasterFile> QuickTime { get; }
 
-    private SupportedMediaFile(FileInfo value, SupportedMediaType mediaType, Mpeg4File mpeg4File = null, QuickTimeMasterFile quickTimeFile = null)
+    private SupportedMediaFile(SupportedMediaType mediaType, Mpeg4File? mpeg4File = null, QuickTimeMasterFile? quickTimeFile = null)
     {
-        Value = value;
         MediaType = mediaType;
-        Mpeg4File = mpeg4File;
-        QuickTimeFile = quickTimeFile;
+        Mpeg4 = mpeg4File != null ? mpeg4File : Maybe.None;
+        QuickTime = quickTimeFile != null ? quickTimeFile : Maybe.None;
     }
 
     public static Result<SupportedMediaFile> Create(string filePath)
@@ -40,13 +38,13 @@ public class SupportedMediaFile
         var mpeg4Result = Mpeg4File.Create(filePath);
         if (mpeg4Result.IsSuccess)
         {
-            return Result.Success(new SupportedMediaFile(file, SupportedMediaType.Mpeg4, mpeg4File: mpeg4Result.Value));
+            return Result.Success(new SupportedMediaFile(SupportedMediaType.Mpeg4, mpeg4File: mpeg4Result.Value));
         }
 
         var quickTimeResult = QuickTimeMasterFile.Create(filePath);
         if (quickTimeResult.IsSuccess)
         {
-            return Result.Success(new SupportedMediaFile(file, SupportedMediaType.QuickTime, quickTimeFile: quickTimeResult.Value));
+            return Result.Success(new SupportedMediaFile(SupportedMediaType.QuickTime, quickTimeFile: quickTimeResult.Value));
         }
 
         return Result.Failure<SupportedMediaFile>("File type is not supported. Only MPEG4 and QuickTime files are supported.");
