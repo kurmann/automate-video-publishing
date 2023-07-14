@@ -8,7 +8,6 @@ public class EssentialQuickTimeMetadata
     public string? Title { get; }
     public string? Description { get; }
     public string? Album { get; }
-    public string? HdrFormat { get; }
     public string? WidthString { get; }
     public string? HeightString { get; }
     public string? FrameRateString { get; }
@@ -18,33 +17,28 @@ public class EssentialQuickTimeMetadata
     public string? FormatProfile { get; }
     public string? Producer { get; }
     public string? InternetMediaType { get; }
-    public string? BitRateString { get; }
+    public string? BitRateVideoString { get; }
     public string? ChromaSubsampling { get; }
-    public string? BitDepth { get; }
     public string? FileSize { get; }
     public string? EncodedDateString { get; }
-    public string? Extra { get; }
 
     private EssentialQuickTimeMetadata(JsonElement jsonObject)
     {
         Title = TryGetValue(jsonObject, "Title");
-        Description = TryGetValue(jsonObject, "Descripton");
+        Description = TryGetValue(jsonObject, "Description");
         Album = TryGetExtraValue(jsonObject, "com_apple_quicktime_album");
-        HdrFormat = TryGetValue(jsonObject, "HDR_Format");
-        WidthString = TryGetValue(jsonObject, "Width");
-        HeightString = TryGetValue(jsonObject, "Height");
-        FrameRateString = TryGetValue(jsonObject, "FrameRate");
+        WidthString = TryGetValue(jsonObject, "Width", MediaInfoTrackType.Video);
+        HeightString = TryGetValue(jsonObject, "Height", MediaInfoTrackType.Video);
+        FrameRateString = TryGetValue(jsonObject, "FrameRate", MediaInfoTrackType.Video);
         DurationString = TryGetValue(jsonObject, "Duration_String3");
-        Format = TryGetValue(jsonObject, "Video_Format_List");
-        Format = TryGetValue(jsonObject, "Format_Profile");
-        Producer = TryGetValue(jsonObject, "Producer");
+        Format = TryGetValue(jsonObject, "Format", MediaInfoTrackType.Video);
+        FormatProfile = TryGetValue(jsonObject, "Format_Profile", MediaInfoTrackType.Video);
+        Producer = TryGetExtraValue(jsonObject, "com_apple_quicktime_producer");
         InternetMediaType = TryGetValue(jsonObject, "InternetMediaType");
-        BitRateString = TryGetValue(jsonObject, "BitRate");
-        ChromaSubsampling = TryGetValue(jsonObject, "ChromaSubsampling");
-        BitDepth = TryGetValue(jsonObject, "BitDepth");
+        BitRateVideoString = TryGetValue(jsonObject, "BitRate", MediaInfoTrackType.Video);
+        ChromaSubsampling = TryGetValue(jsonObject, "ChromaSubsampling", MediaInfoTrackType.Video);
         FileSize = TryGetValue(jsonObject, "FileSize");
         EncodedDateString = TryGetValue(jsonObject, "Encoded_Date");
-        // Extra = GetValue(jsonObject, "extra");
     }
 
     public static Result<EssentialQuickTimeMetadata> Create(JsonDocument? jsonDocument)
