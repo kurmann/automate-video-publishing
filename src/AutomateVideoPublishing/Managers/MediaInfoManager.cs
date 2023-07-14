@@ -25,7 +25,7 @@ public class MediaInfoManager
             RedirectStandardOutput = true,
             UseShellExecute = false,
             CreateNoWindow = true,
-            StandardOutputEncoding = Encoding.UTF8
+            StandardOutputEncoding = Encoding.Latin1
         };
 
         using (var process = new Process { StartInfo = psi, EnableRaisingEvents = true })
