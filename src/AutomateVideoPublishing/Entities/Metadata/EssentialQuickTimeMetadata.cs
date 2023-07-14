@@ -15,6 +15,7 @@ public class EssentialQuickTimeMetadata
     public string? DurationString { get; }
     public TimeSpan? Duration => GetDuration(DurationString);
     public string? Format { get; }
+    public string? FormatProfile { get; }
     public string? Producer { get; }
     public string? InternetMediaType { get; }
     public string? BitRateString { get; }
@@ -26,22 +27,23 @@ public class EssentialQuickTimeMetadata
 
     private EssentialQuickTimeMetadata(JsonElement jsonObject)
     {
-        Title = GetValue(jsonObject, "Title");
-        Description = GetValue(jsonObject, "Title_More");
-        Album = GetValue(jsonObject, "Album");
-        HdrFormat = GetValue(jsonObject, "HDR_Format");
-        WidthString = GetValue(jsonObject, "Width");
-        HeightString = GetValue(jsonObject, "Height");
-        FrameRateString = GetValue(jsonObject, "FrameRate");
-        DurationString = GetValue(jsonObject, "Duration_String3");
-        Format = GetValue(jsonObject, "Format");
-        Producer = GetValue(jsonObject, "Producer");
-        InternetMediaType = GetValue(jsonObject, "InternetMediaType");
-        BitRateString = GetValue(jsonObject, "BitRate");
-        ChromaSubsampling = GetValue(jsonObject, "ChromaSubsampling");
-        BitDepth = GetValue(jsonObject, "BitDepth");
-        FileSize = GetValue(jsonObject, "FileSize");
-        EncodedDateString = GetValue(jsonObject, "Encoded_Date");
+        Title = TryGetValue(jsonObject, "Title");
+        Description = TryGetValue(jsonObject, "Descripton");
+        Album = TryGetExtraValue(jsonObject, "com_apple_quicktime_album");
+        HdrFormat = TryGetValue(jsonObject, "HDR_Format");
+        WidthString = TryGetValue(jsonObject, "Width");
+        HeightString = TryGetValue(jsonObject, "Height");
+        FrameRateString = TryGetValue(jsonObject, "FrameRate");
+        DurationString = TryGetValue(jsonObject, "Duration_String3");
+        Format = TryGetValue(jsonObject, "Video_Format_List");
+        Format = TryGetValue(jsonObject, "Format_Profile");
+        Producer = TryGetValue(jsonObject, "Producer");
+        InternetMediaType = TryGetValue(jsonObject, "InternetMediaType");
+        BitRateString = TryGetValue(jsonObject, "BitRate");
+        ChromaSubsampling = TryGetValue(jsonObject, "ChromaSubsampling");
+        BitDepth = TryGetValue(jsonObject, "BitDepth");
+        FileSize = TryGetValue(jsonObject, "FileSize");
+        EncodedDateString = TryGetValue(jsonObject, "Encoded_Date");
         // Extra = GetValue(jsonObject, "extra");
     }
 
@@ -53,6 +55,7 @@ public class EssentialQuickTimeMetadata
         }
 
         var jsonElement = jsonDocument.RootElement;
+
         if (!jsonElement.TryGetProperty("creatingLibrary", out var creatingLibraryProperty)
             || creatingLibraryProperty.ValueKind != JsonValueKind.Object)
         {
@@ -78,24 +81,81 @@ public class EssentialQuickTimeMetadata
             return Result.Failure<EssentialQuickTimeMetadata>("Das 'media' Element enthält kein Array 'track' oder das Array ist leer.");
         }
 
-        var generalTrackElement = trackProperty[0];  // Get the first object from the track array
-
-        return Result.Success(new EssentialQuickTimeMetadata(generalTrackElement));
+        return Result.Success(new EssentialQuickTimeMetadata(trackProperty));
     }
 
     public Result<YamlContent> GetYamlContent() => YamlContent.CreateFromMetadataSections(this);
 
-    private static string? GetValue(JsonElement jsonObject, string propertyName)
+    /// <summary>
+    /// Liest den Wert eines bestimmten Attributs aus dem gegebenen Track aus.
+    /// </summary>
+    /// <param name="trackArray"></param>
+    /// <param name="propertyName"></param>
+    /// <param name="trackType"></param>
+    /// <returns></returns>
+    public static string? TryGetValue(JsonElement trackArray, string propertyName, MediaInfoTrackType trackType = MediaInfoTrackType.General)
     {
-        if (jsonObject.TryGetProperty(propertyName, out var property))
+        var trackTypeName = trackType.ToString().ToLowerInvariant();  // Convert Enum value to lower-case string
+
+        foreach (var track in trackArray.EnumerateArray())
         {
-            if (property.ValueKind != JsonValueKind.Null)
+            if (track.TryGetProperty("@type", out var typeProperty) && typeProperty.GetString()?.ToLowerInvariant() == trackTypeName)
             {
-                var value = property.GetString();
-                return value;
+                if (track.TryGetProperty(propertyName, out var property))
+                {
+                    if (property.ValueKind != JsonValueKind.Null)
+                    {
+                        var value = property.GetString();
+                        return value;
+                    }
+                }
             }
         }
 
+        return null;
+    }
+
+    /// <summary>
+    /// Liest das "extra"-Attribut eines bestimmten Tracks aus. Dieses wird von Apple benutzt für spezifische Metadaten wie "Album".
+    /// </summary>
+    /// <param name="trackArray"></param>
+    /// <param name="extraPropertyName"></param>
+    /// <param name="trackType"></param>
+    /// <returns></returns>
+    public static string? TryGetExtraValue(JsonElement trackArray, string extraPropertyName, MediaInfoTrackType trackType = MediaInfoTrackType.General)
+    {
+        // Ensure the passed JsonElement is actually an array
+        if (trackArray.ValueKind != JsonValueKind.Array)
+        {
+            return null;
+        }
+
+        // Iterate through each track in the array
+        foreach (var trackElement in trackArray.EnumerateArray())
+        {
+            // Try to get the '@type' property of the current track
+            if (trackElement.TryGetProperty("@type", out var typeElement)
+                && typeElement.ValueKind == JsonValueKind.String
+                && typeElement.GetString()?.Equals(trackType.ToString(), StringComparison.OrdinalIgnoreCase) == true)
+            {
+                // Found the track with the matching type, now look for the 'extra' property
+                if (trackElement.TryGetProperty("extra", out var extraElement)
+                    && extraElement.ValueKind == JsonValueKind.Object)
+                {
+                    // Try to get the specified 'extra' property
+                    if (extraElement.TryGetProperty(extraPropertyName, out var extraProperty))
+                    {
+                        // Return the value of the 'extra' property
+                        if (extraProperty.ValueKind != JsonValueKind.Null)
+                        {
+                            return extraProperty.GetString();
+                        }
+                    }
+                }
+            }
+        }
+
+        // No matching track and/or 'extra' property found
         return null;
     }
 
@@ -123,4 +183,13 @@ public class EssentialQuickTimeMetadata
         return null;
     }
 
+}
+
+public enum MediaInfoTrackType
+{
+    General,
+    Video,
+    Audio,
+    Other,
+    Menu
 }
