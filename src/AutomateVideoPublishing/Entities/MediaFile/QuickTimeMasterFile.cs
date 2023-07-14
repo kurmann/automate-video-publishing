@@ -11,10 +11,7 @@ public class QuickTimeMasterFile
     /// </summary>
     public FileInfo Value { get; }
 
-    private QuickTimeMasterFile(FileInfo file)
-    {
-        Value = file;
-    }
+    private QuickTimeMasterFile(FileInfo file) => Value = file;
 
     /// <summary>
     /// Erstellt ein neues QuickTimeMasterFile-Objekt.
