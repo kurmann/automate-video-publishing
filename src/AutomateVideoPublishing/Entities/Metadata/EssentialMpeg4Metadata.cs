@@ -5,24 +5,24 @@ namespace AutomateVideoPublishing.Entities.Metadata;
 
 public class EssentialMpeg4Metadata
 {
-    public Maybe<string> Title { get; }
-    public Maybe<string> Description { get; }
-    public Maybe<string> Album { get; }
-    public Maybe<string> HdrFormat { get; }
-    public Maybe<string> WidthString { get; }
-    public Maybe<string> HeightString { get; }
-    public Maybe<string> FrameRateString { get; }
-    public Maybe<string> DurationString { get; }
-    public Maybe<TimeSpan> Duration => GetDuration(DurationString);
-    public Maybe<string> Format { get; }
-    public Maybe<string> Producer { get; }
-    public Maybe<string> InternetMediaType { get; }
-    public Maybe<string> BitRateString { get; }
-    public Maybe<string> ChromaSubsampling { get; }
-    public Maybe<string> BitDepth { get; }
-    public Maybe<string> FileSize { get; }
-    public Maybe<string> EncodedDateString { get; }
-    public Maybe<string> Extra { get; }
+    public string? Title { get; }
+    public string? Description { get; }
+    public string? Album { get; }
+    public string? HdrFormat { get; }
+    public string? WidthString { get; }
+    public string? HeightString { get; }
+    public string? FrameRateString { get; }
+    public string? DurationString { get; }
+    public TimeSpan? Duration => GetDuration(DurationString);
+    public string? Format { get; }
+    public string? Producer { get; }
+    public string? InternetMediaType { get; }
+    public string? BitRateString { get; }
+    public string? ChromaSubsampling { get; }
+    public string? BitDepth { get; }
+    public string? FileSize { get; }
+    public string? EncodedDateString { get; }
+    public string? Extra { get; }
 
     private EssentialMpeg4Metadata(JsonElement jsonObject)
     {
@@ -83,24 +83,21 @@ public class EssentialMpeg4Metadata
         return Result.Success(new EssentialMpeg4Metadata(generalTrackElement));
     }
 
-
-
     public Result<YamlContent> GetYamlContent() => YamlContent.CreateFromMetadataSections(this);
 
-    private static Maybe<string> GetValue(JsonElement jsonObject, string propertyName)
+    private static string? GetValue(JsonElement jsonObject, string propertyName)
     {
         if (jsonObject.TryGetProperty(propertyName, out var property))
         {
             if (property.ValueKind != JsonValueKind.Null)
             {
                 var value = property.GetString();
-                return value != null ? Maybe<string>.From(value) : Maybe<string>.None;
+                return value;
             }
         }
 
-        return Maybe<string>.None;
+        return null;
     }
-
 
     private static DateTime ParseDateTime(string? dateString)
     {
@@ -112,20 +109,18 @@ public class EssentialMpeg4Metadata
         throw new FormatException($"Cannot parse '{dateString}' as a valid DateTime.");
     }
 
-
-
-    private static Maybe<TimeSpan> GetDuration(Maybe<string> durationString)
+    private static TimeSpan? GetDuration(string? durationString)
     {
-        if (durationString.HasNoValue)
+        if (string.IsNullOrWhiteSpace(durationString))
         {
-            return Maybe<TimeSpan>.None;
+            return null;
         }
-        if (TimeSpan.TryParseExact(durationString.Value, @"hh\:mm\:ss\.fff", CultureInfo.InvariantCulture, out var duration))
+        if (TimeSpan.TryParseExact(durationString, @"hh\:mm\:ss\.fff", CultureInfo.InvariantCulture, out var duration))
         {
-            return Maybe<TimeSpan>.From(duration);
+            return duration;
         }
 
-        return Maybe<TimeSpan>.None;
+        return null;
     }
 
 }
