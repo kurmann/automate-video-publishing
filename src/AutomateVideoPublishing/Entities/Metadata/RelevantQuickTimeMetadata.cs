@@ -5,44 +5,13 @@ namespace AutomateVideoPublishing.Entities.Metadata;
 
 public class RelevantQuickTimeMetadata
 {
-    public string? Title { get; }
-    public string? Description { get; }
-    public string? Album { get; }
-    public string? WidthString { get; }
-    public string? HeightString { get; }
-    public string? Genre { get; set; }
-    public string? FrameRateString { get; }
-    public string? DurationString { get; }
-    public TimeSpan? Duration => GetDuration(DurationString);
-    public string? Format { get; }
-    public string? FormatProfile { get; }
-    public string? Producer { get; }
-    public string? InternetMediaType { get; }
-    public string? BitRateVideoString { get; }
-    public string? ChromaSubsampling { get; }
-    public string? FileSize { get; }
-    public string? EncodedDateString { get; }
-    public string? CommaSeparatedKeywords {get; set;}
+    public RelevantQuickTimeAttributes Attributes { get; set; }
+    public JsonDocument RawMetadata { get; set; }
 
-    private RelevantQuickTimeMetadata(JsonElement jsonObject)
+    private RelevantQuickTimeMetadata(RelevantQuickTimeAttributes attributes, JsonDocument jsonObject)
     {
-        Title = TryGetValue(jsonObject, "Title");
-        Description = TryGetValue(jsonObject, "Description");
-        Album = TryGetExtraValue(jsonObject, "com_apple_quicktime_album");
-        WidthString = TryGetValue(jsonObject, "Width", MediaInfoTrackType.Video);
-        HeightString = TryGetValue(jsonObject, "Height", MediaInfoTrackType.Video);
-        Genre = TryGetExtraValue(jsonObject, "com_apple_quicktime_genre");
-        FrameRateString = TryGetValue(jsonObject, "FrameRate", MediaInfoTrackType.Video);
-        DurationString = TryGetValue(jsonObject, "Duration_String3");
-        Format = TryGetValue(jsonObject, "Format", MediaInfoTrackType.Video);
-        FormatProfile = TryGetValue(jsonObject, "Format_Profile", MediaInfoTrackType.Video);
-        Producer = TryGetExtraValue(jsonObject, "com_apple_quicktime_producer");
-        InternetMediaType = TryGetValue(jsonObject, "InternetMediaType");
-        BitRateVideoString = TryGetValue(jsonObject, "BitRate", MediaInfoTrackType.Video);
-        ChromaSubsampling = TryGetValue(jsonObject, "ChromaSubsampling", MediaInfoTrackType.Video);
-        FileSize = TryGetValue(jsonObject, "FileSize");
-        EncodedDateString = TryGetValue(jsonObject, "Encoded_Date");
-        CommaSeparatedKeywords = TryGetExtraValue(jsonObject, "com_apple_quicktime_keywords");
+        Attributes = attributes;
+        RawMetadata = jsonObject;
     }
 
     public static Result<RelevantQuickTimeMetadata> Create(JsonDocument? jsonDocument)
@@ -79,7 +48,28 @@ public class RelevantQuickTimeMetadata
             return Result.Failure<RelevantQuickTimeMetadata>("Das 'media' Element enthält kein Array 'track' oder das Array ist leer.");
         }
 
-        return Result.Success(new RelevantQuickTimeMetadata(trackProperty));
+        var attributes = new RelevantQuickTimeAttributes
+        {
+            Title = TryGetValue(trackProperty, "Title"),
+            Description = TryGetValue(trackProperty, "Description"),
+            Album = TryGetExtraValue(trackProperty, "com_apple_quicktime_album"),
+            Width = TryGetValue(trackProperty, "Width", MediaInfoTrackType.Video),
+            Height = TryGetValue(trackProperty, "Height", MediaInfoTrackType.Video),
+            Genre = TryGetExtraValue(trackProperty, "com_apple_quicktime_genre"),
+            FrameRate = TryGetValue(trackProperty, "FrameRate", MediaInfoTrackType.Video),
+            Duration = TryGetValue(trackProperty, "Duration_String3"),
+            Format = TryGetValue(trackProperty, "Format", MediaInfoTrackType.Video),
+            FormatProfile = TryGetValue(trackProperty, "Format_Profile", MediaInfoTrackType.Video),
+            Producer = TryGetExtraValue(trackProperty, "com_apple_quicktime_producer"),
+            InternetMediaType = TryGetValue(trackProperty, "InternetMediaType"),
+            VideoBitRate = TryGetValue(trackProperty, "BitRate", MediaInfoTrackType.Video),
+            ChromaSubsampling = TryGetValue(trackProperty, "ChromaSubsampling", MediaInfoTrackType.Video),
+            FileSize = TryGetValue(trackProperty, "FileSize"),
+            EncodedDate = TryGetValue(trackProperty, "Encoded_Date"),
+            CommaSeparatedKeywords = TryGetExtraValue(trackProperty, "com_apple_quicktime_keywords")
+        };
+
+        return Result.Success(new RelevantQuickTimeMetadata(attributes, jsonDocument));
     }
 
     public Result<YamlContent> GetYamlContent() => YamlContent.CreateFromMetadataSections(this);
@@ -180,7 +170,6 @@ public class RelevantQuickTimeMetadata
 
         return null;
     }
-
 }
 
 public enum MediaInfoTrackType
@@ -190,4 +179,25 @@ public enum MediaInfoTrackType
     Audio,
     Other,
     Menu
+}
+
+public record RelevantQuickTimeAttributes
+{
+    public string? Title { get; init; }
+    public string? Description { get; init; }
+    public string? Album { get; init; }
+    public string? Width { get; init; }
+    public string? Height { get; init; }
+    public string? Genre { get; init; }
+    public string? FrameRate { get; init; }
+    public string? Duration { get; init; }
+    public string? Format { get; init; }
+    public string? FormatProfile { get; init; }
+    public string? Producer { get; init; }
+    public string? InternetMediaType { get; init; }
+    public string? VideoBitRate { get; init; }
+    public string? ChromaSubsampling { get; init; }
+    public string? FileSize { get; init; }
+    public string? EncodedDate { get; init; }
+    public string? CommaSeparatedKeywords { get; init; }
 }

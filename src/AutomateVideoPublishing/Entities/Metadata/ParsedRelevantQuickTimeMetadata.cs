@@ -1,14 +1,17 @@
 using System.Globalization;
 
-namespace AutomateVideoPublishing.Parsers;
+namespace AutomateVideoPublishing.Entities.Metadata;
 
-public class ParsedRelevantQuickTimeMetadata
+public class ParsedRelevantQuickTimeMetadata : IParsedRelevantMetadata
 {
+    public SupportedMediaType Type => SupportedMediaType.QuickTime;
     public Maybe<TimeSpan> Duration { get; }
+    public Maybe<DateTime> EncodedDate { get; }
 
-    private ParsedRelevantQuickTimeMetadata(RelevantQuickTimeMetadata metadata)
+    private ParsedRelevantQuickTimeMetadata(RelevantQuickTimeAttributes attributes)
     {
-        Duration = GetDuration(metadata.DurationString);
+        Duration = TryParseDuration(attributes.Duration);
+        EncodedDate = TryParseDateTime(attributes.EncodedDate);
     }
 
     public static Result<ParsedRelevantQuickTimeMetadata> Create(RelevantQuickTimeMetadata metadata)
@@ -18,10 +21,10 @@ public class ParsedRelevantQuickTimeMetadata
             return Result.Failure<ParsedRelevantQuickTimeMetadata>("Die EssentialQuickTimeMetadata dürfen nicht null sein.");
         }
 
-        return Result.Success(new ParsedRelevantQuickTimeMetadata(metadata));
+        return Result.Success(new ParsedRelevantQuickTimeMetadata(metadata.Attributes));
     }
 
-    private static Maybe<TimeSpan> GetDuration(string? durationString)
+    private static Maybe<TimeSpan> TryParseDuration(string? durationString)
     {
         if (string.IsNullOrWhiteSpace(durationString))
         {
@@ -35,5 +38,15 @@ public class ParsedRelevantQuickTimeMetadata
         }
 
         return Maybe<TimeSpan>.None;
+    }
+
+    private static Maybe<DateTime> TryParseDateTime(string? dateString)
+    {
+        if (DateTime.TryParseExact(dateString, "yyyy-MM-dd HH:mm:ss 'UTC'", CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out var result))
+        {
+            return result;
+        }
+
+        return Maybe<DateTime>.None;
     }
 }
