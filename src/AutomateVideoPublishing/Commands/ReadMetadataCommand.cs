@@ -2,9 +2,6 @@ using AutomateVideoPublishing.Managers;
 
 namespace AutomateVideoPublishing.Commands;
 
-/// <summary>
-/// Liest alle Metadaten aus der QuickTime-Datei und speichert sie als gleichnamiges YAML.
-/// </summary>
 public class ReadMetadataCommand : IAsyncCommand<string, Result>
 {
     private readonly ILogger _logger;
@@ -16,25 +13,49 @@ public class ReadMetadataCommand : IAsyncCommand<string, Result>
         _manager = mediaInfoManager;
     }
 
-    public async Task<Result> ExecuteAsync(string masterfilePath)
+    public async Task<Result> ExecuteAsync(string filePath)
     {
-        var jsonDoc = await _manager.RunAsync(masterfilePath);
-        if (jsonDoc.IsFailure)
+        var supportedMediaFileResult = SupportedMediaFile.Create(filePath);
+        if (supportedMediaFileResult.IsFailure)
         {
-            return Result.Failure($"Error on reading JSON data using MediaInfo CLI: {jsonDoc.Error}");
+            return Result.Failure(supportedMediaFileResult.Error);
         }
 
-        var essentialMpeg4Metadate = EssentialMpeg4Metadata.Create(jsonDoc.Value);
-        if (essentialMpeg4Metadate.IsFailure)
+        var jsonDocResult = await _manager.RunAsync(filePath);
+        if (jsonDocResult.IsFailure)
         {
-            return Result.Failure(essentialMpeg4Metadate.Error);
+            return Result.Failure($"Error on reading JSON data using MediaInfo CLI: {jsonDocResult.Error}");
         }
-        var yamlContent = essentialMpeg4Metadate.Value.GetYamlContent();
-        if (yamlContent.IsFailure)
+
+        Result<YamlContent> yamlContentResult;
+        switch (supportedMediaFileResult.Value.MediaType)
         {
-            return Result.Failure($"Error on creating YAMl content from essential MPEG-4 Data: {yamlContent.Value}");
+            case SupportedMediaType.Mpeg4:
+                var mpeg4Metadata = EssentialMpeg4Metadata.Create(jsonDocResult.Value);
+                if (mpeg4Metadata.IsFailure)
+                {
+                    return Result.Failure(mpeg4Metadata.Error);
+                }
+                yamlContentResult = mpeg4Metadata.Value.GetYamlContent();
+                break;
+            case SupportedMediaType.QuickTime:
+                var quickTimeMetadata = EssentialQuickTimeMetadata.Create(jsonDocResult.Value);
+                if (quickTimeMetadata.IsFailure)
+                {
+                    return Result.Failure(quickTimeMetadata.Error);
+                }
+                yamlContentResult = quickTimeMetadata.Value.GetYamlContent();
+                break;
+            default:
+                return Result.Failure("Unsupported media type.");
         }
-        var yamlWriteResult = await WriteYamlToFileAsync(yamlContent.Value, masterfilePath);
+
+        if (yamlContentResult.IsFailure)
+        {
+            return Result.Failure($"Error on creating YAMl content from essential data: {yamlContentResult.Error}");
+        }
+
+        var yamlWriteResult = await WriteYamlToFileAsync(yamlContentResult.Value, filePath);
         if (yamlWriteResult.IsFailure)
         {
             return Result.Failure($"Error on writing YAML content to file: {yamlWriteResult.Error}");
@@ -43,9 +64,9 @@ public class ReadMetadataCommand : IAsyncCommand<string, Result>
         return yamlWriteResult;
     }
 
-    private async Task<Result> WriteYamlToFileAsync(YamlContent yamlData, string masterfilePath)
+    private async Task<Result> WriteYamlToFileAsync(YamlContent yamlData, string filePath)
     {
-        var yamlFilePath = Path.ChangeExtension(masterfilePath, "yaml");
+        var yamlFilePath = Path.ChangeExtension(filePath, "yaml");
         try
         {
             await File.WriteAllTextAsync(yamlFilePath, yamlData.Value);
