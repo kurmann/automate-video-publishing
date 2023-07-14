@@ -10,6 +10,7 @@ public class EssentialQuickTimeMetadata
     public string? Album { get; }
     public string? WidthString { get; }
     public string? HeightString { get; }
+    public string? Genre { get; set; }
     public string? FrameRateString { get; }
     public string? DurationString { get; }
     public TimeSpan? Duration => GetDuration(DurationString);
@@ -29,6 +30,7 @@ public class EssentialQuickTimeMetadata
         Album = TryGetExtraValue(jsonObject, "com_apple_quicktime_album");
         WidthString = TryGetValue(jsonObject, "Width", MediaInfoTrackType.Video);
         HeightString = TryGetValue(jsonObject, "Height", MediaInfoTrackType.Video);
+        Genre = TryGetExtraValue(jsonObject, "com_apple_quicktime_genre");
         FrameRateString = TryGetValue(jsonObject, "FrameRate", MediaInfoTrackType.Video);
         DurationString = TryGetValue(jsonObject, "Duration_String3");
         Format = TryGetValue(jsonObject, "Format", MediaInfoTrackType.Video);
