@@ -18,7 +18,7 @@ public class SingleVideoPublishStrategy : IAsyncWorkflow
         _logger.Info("Start executing SingleVideoPublishStrategy");
 
         // Bereite die Commands vor
-        var readMasterfileMetadataCommand = new ReadMasterfileMetadataCommand(new MediaInfoManager());
+        var readMetadataCommand = new ReadMetadataCommand(new MediaInfoManager());
 
         // Lese Metadaten für jede Quicktime aus und schreibe es in ein YAML-File
         var stringBuilder = new StringBuilder();
@@ -26,7 +26,7 @@ public class SingleVideoPublishStrategy : IAsyncWorkflow
         stringBuilder.AppendJoin(", ", context.QuickTimeMasterDirectory.QuickTimeFiles.Select(file => file.Name));
         foreach (var masterfile in context.QuickTimeMasterDirectory.QuickTimeFiles)
         {
-            var readMetadataResult = await readMasterfileMetadataCommand.ExecuteAsync(masterfile.FullName);
+            var readMetadataResult = await readMetadataCommand.ExecuteAsync(masterfile.FullName);
             if (readMetadataResult.IsFailure)
             {
                 _logger.Error(readMetadataResult.Error);
@@ -40,7 +40,7 @@ public class SingleVideoPublishStrategy : IAsyncWorkflow
         stringBuilder.AppendJoin(", ", context.PublishedMpeg4Directory.Mpeg4Files.Select(file => file.Name));
         foreach (var masterfile in context.PublishedMpeg4Directory.Mpeg4Files)
         {
-            var readMetadataResult = await readMasterfileMetadataCommand.ExecuteAsync(masterfile.FullName);
+            var readMetadataResult = await readMetadataCommand.ExecuteAsync(masterfile.FullName);
             if (readMetadataResult.IsFailure)
             {
                 _logger.Error(readMetadataResult.Error);
