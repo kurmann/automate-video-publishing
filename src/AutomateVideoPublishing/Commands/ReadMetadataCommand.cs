@@ -1,4 +1,3 @@
-using System.IO;
 using AutomateVideoPublishing.Managers;
 
 namespace AutomateVideoPublishing.Commands;
@@ -6,12 +5,12 @@ namespace AutomateVideoPublishing.Commands;
 /// <summary>
 /// Liest alle Metadaten aus der QuickTime-Datei und speichert sie als gleichnamiges YAML.
 /// </summary>
-public class ReadMasterfileMetadataCommand : IAsyncCommand<string, Result>
+public class ReadMetadataCommand : IAsyncCommand<string, Result>
 {
     private readonly ILogger _logger;
     private readonly MediaInfoManager _manager;
 
-    public ReadMasterfileMetadataCommand(MediaInfoManager mediaInfoManager)
+    public ReadMetadataCommand(MediaInfoManager mediaInfoManager)
     {
         _logger = LogManager.GetCurrentClassLogger();
         _manager = mediaInfoManager;
