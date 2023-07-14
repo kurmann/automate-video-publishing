@@ -22,6 +22,7 @@ public class EssentialQuickTimeMetadata
     public string? ChromaSubsampling { get; }
     public string? FileSize { get; }
     public string? EncodedDateString { get; }
+    public string? CommaSeparatedKeywords {get; set;}
 
     private EssentialQuickTimeMetadata(JsonElement jsonObject)
     {
@@ -41,6 +42,7 @@ public class EssentialQuickTimeMetadata
         ChromaSubsampling = TryGetValue(jsonObject, "ChromaSubsampling", MediaInfoTrackType.Video);
         FileSize = TryGetValue(jsonObject, "FileSize");
         EncodedDateString = TryGetValue(jsonObject, "Encoded_Date");
+        CommaSeparatedKeywords = TryGetExtraValue(jsonObject, "com_apple_quicktime_keywords");
     }
 
     public static Result<EssentialQuickTimeMetadata> Create(JsonDocument? jsonDocument)
